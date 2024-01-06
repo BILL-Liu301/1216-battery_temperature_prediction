@@ -1,6 +1,7 @@
 import os
+import shutil
 
-from api.base.paths import path_output
+from api.base.paths import path_base, path_dataset, path_pts
 
 
 def mkdir(path):
@@ -12,4 +13,9 @@ def mkdir(path):
 
 
 if __name__ == '__main__':
-    mkdir(path_output)
+    if os.path.exists(path_base):
+        print(f'已删除【{path_base}】')
+        shutil.rmtree(path_base)
+    mkdir(path_base)
+    mkdir(path_dataset)
+    mkdir(path_pts)

@@ -9,7 +9,8 @@ class TemperaturePrediction(nn.Module):
         self.decoder = Decoder(paras=paras['decoder']).to(device)
 
         self.seq_predict = paras['seq_predict']
-        self.seq_all = torch.zeros([paras['num_measure_point'], paras['seq_all']]).to(device)
+        self.seq_all_t = torch.zeros([paras['num_measure_point'], paras['seq_all']]).to(device)
+        self.seq_all_i_soc = torch.zeros([2, paras['seq_all']]).to(device)
         self.mode = ''
 
     def set_train(self):
@@ -18,14 +19,20 @@ class TemperaturePrediction(nn.Module):
     def set_test(self):
         self.mode ='test'
 
+    def reinit_seq(self):
+        self.seq_all_t = torch.zeros_like(self.seq_all_t)
+        self.seq_all_i_soc = torch.zeros_like(self.seq_all_i_soc)
+
     def mode_train(self, inp1, inp2):
         oup = list()
         for seq in range(self.seq_predict):
-            self.seq_all[:, 0:(seq+1)] = inp2[:, 0:(seq+1)]
-            encoded = self.encoder(inp1)
-            decoded = self.decoder(encoded, self.seq_all)
+            self.seq_all_i_soc[:, 0:(seq+2)] = inp1[:, 0:(seq+2)]
+            self.seq_all_t[:, 0:(seq+1)] = inp2[:, 0:(seq+1)]
+            encoded = self.encoder(self.seq_all_i_soc.T)
+            decoded = self.decoder(encoded, self.seq_all_t)
             oup.append(decoded)
-        return oup
+            self.reinit_seq()
+        return torch.cat(oup, dim=1)
 
 
     def mode_test(self, inp1, inp2):
@@ -50,8 +57,8 @@ class Encoder(nn.Module):
         size_inp, size_middle, size_oup = paras['size_inp'], paras['size_middle'], paras['size_oup']
         self.bias = False
         self.linear_layer = nn.Sequential(nn.Linear(size_inp, size_middle, bias=self.bias),
-                                          nn.ReLU(), nn.Linear(size_middle, size_middle),
-                                          nn.ReLU(), nn.Linear(size_middle, size_oup))
+                                          nn.ReLU(), nn.Linear(size_middle, size_middle, bias=self.bias),
+                                          nn.ReLU(), nn.Linear(size_middle, size_oup, bias=self.bias))
 
     def forward(self, inp):
         oup = self.linear_layer(inp)
@@ -63,7 +70,7 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         size_multi_head, size_state, seq_inp, size_middle, seq_oup = paras['size_multi_head'], paras['size_state'], paras['seq_inp'], paras['size_middle'], paras['seq_oup']
         self.bias = False
-        self.softmax_switch = True
+        self.softmax_switch = False
         self.softmax = nn.Softmax()
         self.norm = nn.LayerNorm(seq_oup, eps=1e-6)
         self.size_multi_head = size_multi_head
@@ -73,12 +80,12 @@ class Decoder(nn.Module):
         for _ in range(size_multi_head):
             multi_head_layers_temp = nn.ModuleList([])
             for _ in range(3):
-                multi_head_layers_temp.append(nn.Sequential(nn.ReLU(), nn.Linear(seq_inp, size_middle, bias=self.bias),
+                multi_head_layers_temp.append(nn.Sequential(nn.Linear(seq_inp, size_middle, bias=self.bias),
                                                             nn.ReLU(), nn.Linear(size_middle, seq_inp, bias=self.bias)))
             self.multi_head_layers.append(multi_head_layers_temp)
-        self.concat_layers = nn.Sequential(nn.ReLU(), nn.Linear(size_state * size_multi_head, size_middle, bias=self.bias),
+        self.concat_layers = nn.Sequential(nn.Linear(size_state * size_multi_head, size_middle, bias=self.bias),
                                            nn.ReLU(), nn.Linear(size_middle, size_state, bias=self.bias))
-        self.linear_layers = nn.Sequential(nn.ReLU(), nn.Linear(seq_inp, size_middle, bias=self.bias),
+        self.linear_layers = nn.Sequential(nn.Linear(seq_inp, size_middle, bias=self.bias),
                                            nn.ReLU(), nn.Linear(size_middle, seq_oup, bias=self.bias))
 
     def self_attention(self, w_qkv, inp):
