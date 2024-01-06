@@ -54,15 +54,18 @@ class TemperaturePrediction(nn.Module):
 class Encoder(nn.Module):
     def __init__(self, paras):
         super(Encoder, self).__init__()
-        size_inp, size_middle, size_oup = paras['size_inp'], paras['size_middle'], paras['size_oup']
+        size_inp, size_middle, size_oup, size_state = paras['size_inp'], paras['size_middle'], paras['size_oup'], paras['size_state']
         self.bias = False
         self.linear_layer = nn.Sequential(nn.Linear(size_inp, size_middle, bias=self.bias),
                                           nn.ReLU(), nn.Linear(size_middle, size_middle, bias=self.bias),
                                           nn.ReLU(), nn.Linear(size_middle, size_oup, bias=self.bias))
+        self.norm = nn.LayerNorm(size_state, eps=1e-6)
+
 
     def forward(self, inp):
         oup = self.linear_layer(inp)
-        return oup.T
+        oup = self.norm(oup).T
+        return oup
 
 
 class Decoder(nn.Module):
@@ -70,9 +73,11 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         size_multi_head, size_state, seq_inp, size_middle, seq_oup = paras['size_multi_head'], paras['size_state'], paras['seq_inp'], paras['size_middle'], paras['seq_oup']
         self.bias = False
-        self.softmax_switch = False
-        self.softmax = nn.Softmax()
-        self.norm = nn.LayerNorm(seq_oup, eps=1e-6)
+        self.tanh_switch = True
+        self.softmax_switch = True
+        self.tanh = nn.Tanh()
+        self.softmax = nn.Softmax(dim=0)
+        self.norm = nn.LayerNorm(size_state, eps=1e-6)
         self.size_multi_head = size_multi_head
 
         self.w_qkv = nn.Parameter(torch.normal(mean=0, std=2, size=(3, size_state, size_state)))
@@ -94,8 +99,8 @@ class Decoder(nn.Module):
         v = torch.matmul(w_qkv[2], inp)
 
         b = torch.matmul(k.T, q)
-        if self.softmax_switch:
-            b = self.softmax(b)
+        if self.tanh_switch:
+            b = self.tanh(b)
         oup = torch.matmul(v, b)
         return oup, q, k, v
 

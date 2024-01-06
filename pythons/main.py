@@ -8,13 +8,15 @@ import numpy as np
 import torch
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 from api.module.model_Temperature_Predict import TemperaturePrediction
 from api.base.paras import device, paras, batch_size, lr_init, epoch_max
-from api.base.paths import path_dataset_pkl, path_result, path_pts, path_pt_best
+from api.base.paths import path_dataset_pkl, path_result, path_pts, path_pt_best, path_figs
 from api.util.Mode_Choose import ModeTrain
 from api.util.Criterion_Choose import CriterionTrain
+from api.util.plots import plot_during_train
 
 # 设定随机种子
 torch.manual_seed(2024)
@@ -58,6 +60,7 @@ if __name__ == '__main__':
                     result.write(f"\nEpoch: {epoch + 1}/{epoch_max}, Lr:{scheduler.get_last_lr()[0]}")
                     result.write(f"\nLoss_min: {mode_train.loss_min:.6f}, Loss_max: {mode_train.loss_max:.6f}")
                     result.write(f"\nLoss_min_now: {mode_train.loss.min():.6f}, Loss_max_now: {mode_train.loss.max():.6f}")
+                    result.write(f"\nGrad: {mode_train.grad_max}, Name: {mode_train.grad_max_name}")
                     result.write(f"\nCPU Percent: {psutil.cpu_percent()}%")
                     for d in range(device_count):
                         handle = pynvml.nvmlDeviceGetHandleByIndex(d)
@@ -70,6 +73,7 @@ if __name__ == '__main__':
                         result.write(f"Now: {time.asctime(time.localtime())}")
                         result.write(f"\nEpoch: {epoch + 1}/{epoch_max}, Lr:{scheduler.get_last_lr()[0]}")
                         result.write(f"\nLoss_min: {mode_train.loss_min:.6f}, Loss_max: {mode_train.loss_max:.6f}")
+                        result.write(f"\nGrad: {mode_train.grad_max}, Name: {mode_train.grad_max_name}")
                         result.write(f"\nCPU Percent: {psutil.cpu_percent()}%")
                         for d in range(device_count):
                             handle = pynvml.nvmlDeviceGetHandleByIndex(d)
@@ -89,6 +93,8 @@ if __name__ == '__main__':
             torch.save(TP, os.path.join(path_pts, f"{epoch}_{loss_all[epoch, 1]:.2f}.pt"))
             if loss_all[epoch, 1] == loss_all[0:(epoch + 1), 1].min():
                 torch.save(TP, path_pt_best)
+            plot_during_train(epoch, loss_all, lr_all)
+            plt.savefig(f"{path_figs}/train.png")
 
     elif mode_switch['Test'] == 1:
         print('正在进行模型测试')

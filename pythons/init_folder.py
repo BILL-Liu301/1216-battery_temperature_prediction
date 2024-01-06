@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from api.base.paths import path_base, path_dataset, path_pts
+from api.base.paths import path_base, path_dataset, path_pts, path_figs
 
 
 def mkdir(path):
@@ -19,3 +19,4 @@ if __name__ == '__main__':
     mkdir(path_base)
     mkdir(path_dataset)
     mkdir(path_pts)
+    mkdir(path_figs)
