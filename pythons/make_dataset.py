@@ -55,14 +55,14 @@ if __name__ == '__main__':
     data_pkl = dict()
     data_pkl_train, data_pkl_test = dict(), dict()
     for i in range(data_np_train.shape[0]):
-        data_pkl_temp = dict()
+        data_pkl_temp = list()
         for j in range(data_np_train.shape[1]):
-            data_pkl_temp[j] = torch.from_numpy(data_np_train[i, j]).to(device)
+            data_pkl_temp.append(torch.from_numpy(data_np_train[i, j].transpose()).to(torch.float32).to(device))
         data_pkl_train[temperature_match['train'][i]] = data_pkl_temp
     for i in range(data_np_test.shape[0]):
-        data_pkl_temp = dict()
+        data_pkl_temp = list()
         for j in range(data_np_test.shape[1]):
-            data_pkl_temp[j] = torch.from_numpy(data_np_test[i, j]).to(device)
+            data_pkl_temp.append(torch.from_numpy(data_np_test[i, j].transpose()).to(torch.float32).to(device))
         data_pkl_test[temperature_match['test'][i]] = data_pkl_temp
     data_pkl['train'] = data_pkl_train
     data_pkl['test'] = data_pkl_test

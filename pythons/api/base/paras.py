@@ -13,8 +13,11 @@ sequence_predict = 9
 # 模型参数
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 base_size = 32
+batch_size = 8
+lr_init = 1e-4
+epoch_max = 20
 paras_encoder = {
-    'size_inp': 3,
+    'size_inp': 2,
     'size_middle': base_size,
     'size_oup': num_measure_point
 }
