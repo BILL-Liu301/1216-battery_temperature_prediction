@@ -104,7 +104,7 @@ if __name__ == '__main__':
         TP = torch.load(path_pt_best)
 
         criterion_test = CriterionTest()
-        mode_test = ModeTest(model=TP, dataset=dataset['train'], criterion=criterion_test)
+        mode_test = ModeTest(model=TP, dataset=dataset['test'], criterion=criterion_test)
         with torch.no_grad():
             mode_test.run()
             temperature_prediction = integration_predicted_temperature(mode_test.temperature_prediction, dataset['origin'], 1)

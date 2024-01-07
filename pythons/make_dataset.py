@@ -50,7 +50,7 @@ if __name__ == '__main__':
     data_np_train = np.zeros([len(temperature_match['train']), batch_all, sequence_init + sequence_predict, data_np_origin.shape[-1]])
     data_np_test = np.zeros([len(temperature_match['test']), batch_all, sequence_init + sequence_predict, data_np_origin.shape[-1]])
     slice_origin(data_np_origin[:, 0], data_np_train, batch_all, sequence_init + sequence_predict)
-    slice_origin(data_np_origin[:, 0], data_np_test, batch_all, sequence_init + sequence_predict)
+    slice_origin(data_np_origin[:, 1], data_np_test, batch_all, sequence_init + sequence_predict)
 
     # 将数据集重新排列，移到device内，并保存于dict中
     print(f'进行数据重排列，并将数据移至{device}，正在处理...')
