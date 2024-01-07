@@ -34,11 +34,10 @@ class ModeTrain(Thread):
                 temperature_prediction = list()
                 temperature_reference = list()
                 # 训练主过程
-                for j in tqdm(range(min(self.batch_size, len(dataset_cell) - i * self.batch_size)), desc='Seq', leave=False, ncols=80):
-                    inp1 = dataset_cell[i * self.batch_size + j][1:3]
+                for j in tqdm(range(min(self.batch_size, len(dataset_cell) - i * self.batch_size)), desc='Group', leave=False, ncols=80):
+                    inp1 = dataset_cell[i * self.batch_size + j][0:3]
                     inp2 = dataset_cell[i * self.batch_size + j][3:]
-                    temp = self.model(inp1, inp2)
-                    temperature_prediction.append(temp)
+                    temperature_prediction.append(self.model(inp1, inp2))
                     temperature_reference.append(inp2[:, 1:])
                 loss_mean, self.loss = self.criterion(pre=temperature_prediction, ref=temperature_reference)
                 self.optimizer.zero_grad()
@@ -52,3 +51,24 @@ class ModeTrain(Thread):
                 self.grad_max, self.grad_max_name = self.read_grad_max(self.model.encoder, 'encoder')
                 self.grad_max, self.grad_max_name = self.read_grad_max(self.model.decoder, 'decoder')
         self.flag_finish = True
+
+
+class ModeTest:
+    def __init__(self, model, criterion, dataset):
+        self.model = model
+        self.criterion = criterion
+        self.dataset = dataset
+        self.loss = None
+        self.temperature_prediction = None
+
+    def run(self):
+        self.model.set_test()
+        self.temperature_prediction = dict()
+        for dataset_cell_key, dataset_cell in tqdm(self.dataset.items(), desc='Cell', leave=False, ncols=80, disable=False):
+            temperature_prediction_temp = list()
+            for seq in tqdm(dataset_cell, desc='Group', leave=False, ncols=80):
+                inp1 = seq[0:3]
+                inp2 = seq[3:, 0:1]
+                temperature_prediction_temp.append(self.model(inp1, inp2))
+            self.temperature_prediction.update({dataset_cell_key: temperature_prediction_temp})
+        self.loss = self.criterion(pre=self.temperature_prediction, ref=self.dataset)

@@ -17,7 +17,7 @@ class TemperaturePrediction(nn.Module):
         self.mode = 'train'
 
     def set_test(self):
-        self.mode ='test'
+        self.mode = 'test'
 
     def reinit_seq(self):
         self.seq_all_t = torch.zeros_like(self.seq_all_t)
@@ -26,17 +26,27 @@ class TemperaturePrediction(nn.Module):
     def mode_train(self, inp1, inp2):
         oup = list()
         for seq in range(self.seq_predict):
-            self.seq_all_i_soc[:, 0:(seq+2)] = inp1[:, 0:(seq+2)]
-            self.seq_all_t[:, 0:(seq+1)] = inp2[:, 0:(seq+1)]
+            self.seq_all_i_soc[:, 0:(seq + 2)] = inp1[1:, 0:(seq + 2)]
+            self.seq_all_t[:, 0:(seq + 1)] = inp2[:, 0:(seq + 1)]
             encoded = self.encoder(self.seq_all_i_soc.T)
             decoded = self.decoder(encoded, self.seq_all_t)
             oup.append(decoded)
             self.reinit_seq()
         return torch.cat(oup, dim=1)
 
-
     def mode_test(self, inp1, inp2):
-        return 0.0
+        oup = list()
+        for seq in range(self.seq_predict):
+            self.seq_all_i_soc[:, 0:(seq + 2)] = inp1[1:, 0:(seq + 2)]
+            if seq == 0:
+                self.seq_all_t[:, 0:(seq + 1)] = inp2
+            else:
+                self.seq_all_t[:, 0:(seq + 1)] = torch.cat([inp2, torch.cat(oup, dim=1)], dim=1)
+            encoded = self.encoder(self.seq_all_i_soc.T)
+            decoded = self.decoder(encoded, self.seq_all_t)
+            oup.append(decoded)
+            self.reinit_seq()
+        return torch.cat(oup, dim=1)
 
     def forward(self, inp1, inp2):
         # 若mode为train，则说明是训练模式，输入数据inp2需包含全过程的温度变化
@@ -44,7 +54,7 @@ class TemperaturePrediction(nn.Module):
         if self.mode == 'train' and inp2.shape[1] != 1:
             oup = self.mode_train(inp1=inp1, inp2=inp2)
         elif self.mode == 'test' and inp2.shape[1] == 1:
-            oup = self.mode_test(inp1=inp1, inp2=inp2)
+            oup = torch.cat([inp1, torch.cat([inp2, self.mode_test(inp1=inp1, inp2=inp2)], dim=1)], dim=0)
         else:
             print(f'当前模式为【{self.mode}】，但输入数据的尺寸分别为inp1：【{inp1.shape}】，inp2：【{inp2.shape}】')
             raise Exception
@@ -60,7 +70,6 @@ class Encoder(nn.Module):
                                           nn.ReLU(), nn.Linear(size_middle, size_middle, bias=self.bias),
                                           nn.ReLU(), nn.Linear(size_middle, size_oup, bias=self.bias))
         self.norm = nn.LayerNorm(size_state, eps=1e-6)
-
 
     def forward(self, inp):
         oup = self.linear_layer(inp)
