@@ -50,7 +50,7 @@ if __name__ == '__main__':
         loss_all = np.zeros([epoch_max, 2])
         lr_all = np.zeros([epoch_max, 1])
 
-        for epoch in tqdm(range(epoch_max), desc='Epoch', leave=False, ncols=80, disable=False):
+        for epoch in tqdm(range(epoch_max), desc='Epoch', leave=False, ncols=100, disable=False):
             mode_train = ModeTrain(model=TP, batch_size=batch_size, dataset=dataset['train'], criterion=criterion_train, optimizer=optimizer)
             mode_train.start()
 
@@ -107,12 +107,11 @@ if __name__ == '__main__':
         mode_test = ModeTest(model=TP, dataset=dataset['test'], criterion=criterion_test)
         with torch.no_grad():
             mode_test.run()
-            temperature_prediction = integration_predicted_temperature(mode_test.temperature_prediction, dataset['origin'], 1)
         plot_for_test_loss(mode_test.loss)
         plt.savefig(f"{path_figs_test}/test_loss.png")
         print(f'已保存test_loss.png')
-        for cell_name in temperature_prediction:
-            plot_for_predicted_temperature(temperature_prediction[cell_name], dataset['origin'][cell_name], num_measure_point, temperature_measure_points[cell_name])
+        for cell_name in mode_test.temperature_prediction:
+            plot_for_predicted_temperature(cell_name, mode_test.temperature_prediction[cell_name], dataset['origin'][cell_name], num_measure_point, temperature_measure_points[cell_name])
             plt.savefig(f"{path_figs_test}/predicted_temperature_{cell_name}.png")
             print(f'已保存predicted_temperature_{cell_name}.png')
 
