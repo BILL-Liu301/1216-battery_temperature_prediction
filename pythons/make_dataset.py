@@ -28,7 +28,9 @@ if __name__ == '__main__':
     # 内  3    4   5  外
     #       6    7
     #         下
-    data_np_origin = np.zeros([len(temperature_match['train']), 2, duration.shape[0], num_measure_point + 3])
+
+    # data_np_origin：【同一个模组内可用电芯数量、0为训练/1为测试、充电时间、时间+电流+SOC+各测点温度】
+    data_np_origin = np.zeros([len(temperature_match['train']), 2, duration.shape[0], 3 + num_measure_point])
     print(f'测试集和训练集分别有{data_np_origin.shape[0]}个电芯，正在提取各电芯数据...')
     for group in range(data_np_origin.shape[0]):
         # 提取train和test对应的电芯id
@@ -53,19 +55,22 @@ if __name__ == '__main__':
     # 将数据集重新排列，移到device内，并保存于dict中
     print(f'进行数据重排列，并将数据移至{device}，正在处理...')
     data_pkl = dict()
-    data_pkl_train, data_pkl_test = dict(), dict()
+    data_pkl_train, data_pkl_test, data_pkl_origin = dict(), dict(), dict()
     for i in range(data_np_train.shape[0]):
         data_pkl_temp = list()
         for j in range(data_np_train.shape[1]):
             data_pkl_temp.append(torch.from_numpy(data_np_train[i, j].transpose()).to(torch.float32).to(device))
         data_pkl_train[temperature_match['train'][i]] = data_pkl_temp
+        data_pkl_origin[temperature_match['train'][i]] = data_np_origin[i, 0].transpose()
     for i in range(data_np_test.shape[0]):
         data_pkl_temp = list()
         for j in range(data_np_test.shape[1]):
             data_pkl_temp.append(torch.from_numpy(data_np_test[i, j].transpose()).to(torch.float32).to(device))
         data_pkl_test[temperature_match['test'][i]] = data_pkl_temp
+        data_pkl_origin[temperature_match['test'][i]] = data_np_origin[i, 0].transpose()
     data_pkl['train'] = data_pkl_train
     data_pkl['test'] = data_pkl_test
+    data_pkl['origin'] = data_pkl_origin
 
     # 保存数据
     with open(path_dataset_pkl, 'wb') as pkl:
