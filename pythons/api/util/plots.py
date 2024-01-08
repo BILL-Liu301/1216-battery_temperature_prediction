@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 
 def plot_during_train(epoch, loss_all, lr_all):
@@ -28,13 +29,15 @@ def plot_for_test_loss(loss):
     plt.legend(loc='upper right')
 
 
-def plot_for_predicted_temperature(temperature_prediction, temperature_reference, num_measure_point, measure_point_ids):
+def plot_for_predicted_temperature(cell_name, temperature_prediction, temperature_reference, num_measure_point, measure_point_ids):
     plt.clf()
-    for point in range(num_measure_point):
+    for point in tqdm(range(num_measure_point), desc='Point', leave=False, ncols=100, disable=False):
         plt.subplot(num_measure_point, 1, point+1)
-        plt.plot(temperature_reference[0, :], temperature_reference[3+point, :], 'k-', label='ref')
-        plt.plot(temperature_prediction[0, :], temperature_prediction[3+point, :], 'k--', label='pre')
-        plt.grid(True)
-        plt.tick_params(axis='both', labelsize=10)
-        plt.ylabel(measure_point_ids[point] + '/℃', fontsize=10)
-        plt.legend(loc='lower right')
+        plt.plot(temperature_reference[0, :], temperature_reference[3 + point, :], 'k--', label='ref')
+        for group in tqdm(temperature_prediction, desc=f'Plot_{cell_name}', leave=False, ncols=100, disable=False):
+            group_np = group.cpu().numpy()
+            plt.plot(group_np[0, :], group_np[3+point], 'k-')
+            plt.grid(True)
+            plt.tick_params(axis='both', labelsize=10)
+            plt.ylabel(measure_point_ids[point] + '/℃', fontsize=10)
+            plt.legend(loc='lower right')

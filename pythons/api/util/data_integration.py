@@ -3,7 +3,7 @@ import numpy as np
 
 def integration_predicted_temperature(temperature_prediction, temperature_origin, mode):
     # mode：
-    #   0：直接覆盖拼接
+    #   0：直接拼接
     #   1：逐渐求平均
     temperature_prediction_integration = dict()
     for cell_name, temperature_groups in temperature_prediction.items():
@@ -17,7 +17,7 @@ def integration_predicted_temperature(temperature_prediction, temperature_origin
             group_np = group.cpu().numpy()
             seq_predict = group_np.shape[1]
             if mode == 0:
-                temperature_prediction_integration_np[:, group_id:(group_id + seq_predict)] = group_np[:, 0:seq_predict]
+                pass
             elif mode == 1:
                 temperature_prediction_integration_np[3:, group_id:(group_id + seq_predict-1)] = (
                         (temperature_prediction_integration_np[3:, group_id:(group_id + seq_predict-1)] + group_np[3:, 0:seq_predict-1]) / 2)
