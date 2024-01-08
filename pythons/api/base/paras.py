@@ -8,14 +8,15 @@ num_measure_point = 7
 
 # 时序设定
 sequence_init = 1
-sequence_predict = 9
+sequence_predict = 999
 
 # 模型参数
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-base_size = 16
-batch_size = 8
-lr_init = 1e-3
+base_size = 32
+batch_size = 32
+lr_init = 1e-4
 epoch_max = 20
+seq_concern = 10
 paras_encoder = {
     'size_inp': 2,
     'size_middle': base_size,
@@ -23,16 +24,16 @@ paras_encoder = {
     'size_state': num_measure_point
 }
 paras_decoder = {
-    'size_multi_head': 2,
+    'size_multi_head': 1,
     'size_state': num_measure_point,
     'size_middle': base_size,
-    'seq_inp': sequence_init + sequence_predict,
+    'seq_inp': seq_concern,
     'seq_oup': 1
 }
 paras = {
     'encoder': paras_encoder,
     'decoder': paras_decoder,
-    'seq_all': sequence_init + sequence_predict,
+    'seq_concern': seq_concern,
     'seq_predict': sequence_predict,
     'num_measure_point': num_measure_point
 }

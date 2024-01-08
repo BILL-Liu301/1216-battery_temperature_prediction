@@ -33,15 +33,10 @@ def plot_for_predicted_temperature(cell_name, temperature_prediction, temperatur
     plt.clf()
     for point in tqdm(range(num_measure_point), desc='Point', leave=False, ncols=100, disable=False):
         plt.subplot(num_measure_point, 1, point+1)
-        plt.plot(temperature_reference[0, :], temperature_reference[3 + point, :], 'k-', label='ref')
-        group_id = 0
+        plt.plot(temperature_reference[0, :], temperature_reference[3 + point, :], 'k--', label='ref')
         for group in tqdm(temperature_prediction, desc=f'Plot_{cell_name}', leave=False, ncols=100, disable=False):
-            if group_id % num_measure_point != 0:
-                group_id += 1
-                continue
-            group_id += 1
             group_np = group.cpu().numpy()
-            plt.plot(group_np[0, :], group_np[3+point], 'k--')
+            plt.plot(group_np[0, :], group_np[3+point], 'k-')
             plt.grid(True)
             plt.tick_params(axis='both', labelsize=10)
             plt.ylabel(measure_point_ids[point] + '/℃', fontsize=10)
