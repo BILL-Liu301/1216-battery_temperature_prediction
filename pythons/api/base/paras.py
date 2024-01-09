@@ -11,11 +11,22 @@ sequence_init = 1
 sequence_predict = 999
 
 # 模型参数
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda:0')
+
+# PreEncoder
+paras_PreEncoder = {
+    'num_measure_point': num_measure_point,
+    'num_pre_encoder': 20,
+    'max_epochs': 200,
+    'lr_init': 1e-3,
+    'size_middle': 128
+}
+
+
 base_size = 32
 batch_size = 32
 lr_init = 1e-4
-epoch_max = 20
+epoch_max = 100
 seq_concern = 10
 paras_encoder = {
     'size_inp': 2,
