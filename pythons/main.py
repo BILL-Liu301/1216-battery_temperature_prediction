@@ -14,7 +14,7 @@ from tqdm import tqdm
 from api.module.model_Temperature_Predict import TemperaturePrediction
 from api.base.ids import temperature_measure_points
 from api.base.paras import device, paras, batch_size, lr_init, epoch_max, num_measure_point, sequence_predict
-from api.base.paths import path_dataset_pkl, path_result, path_pts, path_pt_best, path_figs, path_figs_test
+from api.base.paths import path_data_origin_pkl, path_result, path_pts, path_pt_best, path_figs, path_figs_test
 from api.util.Mode_Choose import ModeTrain, ModeTest
 from api.util.Criterion_Choose import CriterionTrain, CriterionTest
 from api.util.plots import plot_during_train, plot_for_test_loss, plot_for_predicted_temperature
@@ -27,7 +27,7 @@ torch.manual_seed(2024)
 TP = TemperaturePrediction(device=device, paras=paras)
 
 # 加载数据集
-with open(path_dataset_pkl, 'rb') as pkl:
+with open(path_data_origin_pkl, 'rb') as pkl:
     dataset = pickle.load(pkl)
     pkl.close()
 
