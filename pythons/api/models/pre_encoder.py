@@ -1,4 +1,6 @@
 import math
+from typing import Any, Optional
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -69,11 +71,12 @@ class PreEncoder_LightningModule(pl.LightningModule):
     def __init__(self, paras: dict):
         super(PreEncoder_LightningModule, self).__init__()
         self.pre_encoder = PreEncoder_Model(paras)
-        self.criterion = nn.L1Loss(reduction='mean')
+        self.criterion_train = nn.MSELoss(reduction='mean')
+        self.criterion_val = nn.L1Loss(reduction='mean')
         self.optimizer = optim.Adam(self.parameters(), paras['lr_init'])
         self.scheduler = lr_scheduler.OneCycleLR(optimizer=self.optimizer, max_lr=paras['lr_init'], total_steps=paras['max_epochs'], pct_start=0.1)
 
-    def training_step(self, batches):
+    def training_step(self, batches, batch_idx):
         loss_batches = list()
         for batch in batches:
             # 主训练过程
@@ -87,14 +90,33 @@ class PreEncoder_LightningModule(pl.LightningModule):
             ref_std = ref_temperature.std(dim=0)
             ref_mean_std = torch.cat([ref_mean.unsqueeze(0), ref_std.unsqueeze(0)], dim=0)
 
-            loss_temperature = self.criterion(pre_temperature, ref_temperature).unsqueeze(0)
-            loss_mean_std = self.criterion(pre_mean_std, ref_mean_std).unsqueeze(0)
+            loss_temperature = self.criterion_train(pre_temperature, ref_temperature).unsqueeze(0)
+            loss_mean_std = self.criterion_train(pre_mean_std, ref_mean_std).unsqueeze(0)
             loss_batches.append((loss_temperature + loss_mean_std) / 2)
-        loss_torch = torch.cat(loss_batches)
-        self.log('loss_max', loss_torch.max(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
-        self.log('loss_min', loss_torch.min(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
-        self.log('loss_mean', loss_torch.mean(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
-        return loss_torch.mean()
+            self.log('loss_mean_train', torch.cat(loss_batches).mean(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
+        return torch.cat(loss_batches).mean()
+
+    def validation_step(self, batches, batch_idx):
+        loss_batches = list()
+        for batch in batches:
+            # 主训练过程
+            inp1 = batch[0:4]  # Position Embedding, Location, I, SOC
+            inp2 = batch[4:, 0:1]  # Initial Temperature
+            pre_temperature = self.pre_encoder(inp1, inp2)
+            pre_mean_std = self.pre_encoder.pre_mean_std
+
+            ref_temperature = batch[4:]
+            ref_mean = ref_temperature.mean(dim=0)
+            ref_std = ref_temperature.std(dim=0)
+            ref_mean_std = torch.cat([ref_mean.unsqueeze(0), ref_std.unsqueeze(0)], dim=0)
+
+            loss_temperature = self.criterion_val(pre_temperature, ref_temperature).unsqueeze(0)
+            loss_mean_std = self.criterion_val(pre_mean_std, ref_mean_std).unsqueeze(0)
+            loss_batches.append((loss_temperature + loss_mean_std) / 2)
+            self.log('loss_max_val', torch.cat(loss_batches).abs().max(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
+        return torch.cat(loss_batches).abs().max()
 
     def configure_optimizers(self):
         return self.optimizer
+
+

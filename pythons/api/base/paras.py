@@ -19,7 +19,7 @@ paras_PreEncoder = {
     'num_pre_encoder': 20,
     'max_epochs': 200,
     'lr_init': 1e-3,
-    'size_middle': 128
+    'size_middle': 64
 }
 
 
