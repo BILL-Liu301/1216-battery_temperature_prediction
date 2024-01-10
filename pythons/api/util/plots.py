@@ -41,3 +41,19 @@ def plot_for_predicted_temperature(cell_name, temperature_prediction, temperatur
             plt.tick_params(axis='both', labelsize=10)
             plt.ylabel(measure_point_ids[point] + '/℃', fontsize=10)
             plt.legend(loc='lower right')
+
+
+def plot_for_pre_encoder_test(test_results, num_measure_point):
+    plt.clf()
+
+    num_results = len(test_results)
+    for i in range(num_results):
+        test_result = test_results[i]
+        plt.subplot(num_results, 1, i + 1)
+        for result_name, result in test_result.items():
+            for j in range(num_measure_point):
+                if result_name  == 'pre':
+                    plt.plot(result[0], result[4 + j], 'k-')
+                else:
+                    plt.plot(result[0], result[4 + j], 'k-.')
+

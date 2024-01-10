@@ -75,7 +75,7 @@ class PreEncoder_LightningModule(pl.LightningModule):
         self.criterion_val = nn.L1Loss(reduction='mean')
         self.optimizer = optim.Adam(self.parameters(), paras['lr_init'])
         self.scheduler = lr_scheduler.OneCycleLR(optimizer=self.optimizer, max_lr=paras['lr_init'], total_steps=paras['max_epochs'], pct_start=0.2)
-
+        self.test_results = list()
     def training_step(self, batches, batch_idx):
         loss_batches = list()
         for batch in batches:
@@ -95,6 +95,19 @@ class PreEncoder_LightningModule(pl.LightningModule):
             loss_batches.append((loss_temperature + loss_mean_std) / 2)
             self.log('lr', self.scheduler.get_last_lr()[0], prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
         return torch.cat(loss_batches).mean()
+
+    def test_step(self, batches, batch_idx):
+        for batch in batches:
+            # 主训练过程
+            inp1 = batch[0:4]  # Position Embedding, Location, I, SOC
+            inp2 = batch[4:, 0:1]  # Initial Temperature
+            pre_temperature = self.pre_encoder(inp1, inp2)
+            pre_temperature = torch.cat([batch[0:4], pre_temperature], dim=0)
+            ref_temperature = batch
+            self.test_results.append({
+                'pre': pre_temperature.cpu().numpy(),
+                'ref': ref_temperature.cpu().numpy()
+            })
 
     def validation_step(self, batches, batch_idx):
         loss_batches = list()
