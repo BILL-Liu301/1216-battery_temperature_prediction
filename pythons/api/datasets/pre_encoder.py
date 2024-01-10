@@ -7,7 +7,7 @@ from torch.utils.data import Dataset
 class PreEncoder_Dataset(Dataset):
     def __init__(self, path_data_origin_pkl, num_pre_encoder, device):
         self.num_pre_encoder, self.device = num_pre_encoder, device
-        self.num_expand = 5
+        self.num_expand = 20
         self.data = self.load_from_pkl(path_data_origin_pkl)
 
     def load_from_pkl(self, path_data_origin_pkl):

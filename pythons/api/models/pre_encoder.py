@@ -6,7 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import pytorch_lightning as pl
-from pytorch_lightning.utilities.types import STEP_OUTPUT
+from pytorch_lightning.utilities.types import STEP_OUTPUT, LRSchedulerTypeUnion
 
 
 class PreEncoder_Model(nn.Module):
@@ -74,7 +74,7 @@ class PreEncoder_LightningModule(pl.LightningModule):
         self.criterion_train = nn.MSELoss(reduction='mean')
         self.criterion_val = nn.L1Loss(reduction='mean')
         self.optimizer = optim.Adam(self.parameters(), paras['lr_init'])
-        self.scheduler = lr_scheduler.OneCycleLR(optimizer=self.optimizer, max_lr=paras['lr_init'], total_steps=paras['max_epochs'], pct_start=0.1)
+        self.scheduler = lr_scheduler.OneCycleLR(optimizer=self.optimizer, max_lr=paras['lr_init'], total_steps=paras['max_epochs'], pct_start=0.2)
 
     def training_step(self, batches, batch_idx):
         loss_batches = list()
@@ -93,7 +93,7 @@ class PreEncoder_LightningModule(pl.LightningModule):
             loss_temperature = self.criterion_train(pre_temperature, ref_temperature).unsqueeze(0)
             loss_mean_std = self.criterion_train(pre_mean_std, ref_mean_std).unsqueeze(0)
             loss_batches.append((loss_temperature + loss_mean_std) / 2)
-            self.log('loss_mean_train', torch.cat(loss_batches).mean(), prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
+            self.log('lr', self.scheduler.get_last_lr()[0], prog_bar=True, on_step=True, on_epoch=True, batch_size=1)
         return torch.cat(loss_batches).mean()
 
     def validation_step(self, batches, batch_idx):
@@ -117,6 +117,5 @@ class PreEncoder_LightningModule(pl.LightningModule):
         return torch.cat(loss_batches).abs().max()
 
     def configure_optimizers(self):
-        return self.optimizer
-
+        return [self.optimizer], [self.scheduler]
 
