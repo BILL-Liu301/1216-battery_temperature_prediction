@@ -14,7 +14,7 @@ from tqdm import tqdm
 from api.module.model_Temperature_Predict import TemperaturePrediction
 from api.base.ids import temperature_measure_points
 from api.base.paras import device, paras, batch_size, lr_init, epoch_max, num_measure_point, sequence_predict
-from api.base.paths import path_data_origin_pkl, path_result, path_pts, path_pt_best, path_figs, path_figs_test
+from api.base.paths import path_data_origin_pkl, path_result, path_ckpts, path_pt_best, path_figs, path_figs_test
 from api.util.Mode_Choose import ModeTrain, ModeTest
 from api.util.Criterion_Choose import CriterionTrain, CriterionTest
 from api.util.plots import plot_during_train, plot_for_test_loss, plot_for_predicted_temperature
@@ -62,7 +62,7 @@ if __name__ == '__main__':
 
         mode_train = ModeTrain(model=TP, batch_size=batch_size, dataset=dataset['train'], criterion=criterion_train, optimizer=optimizer, scheduler=scheduler,
                                epoch_max=epoch_max, sequence_predict=sequence_predict, num_measure_point=num_measure_point,
-                               path_pts=path_pts, path_pt_best=path_pt_best, path_figs=path_figs)
+                               path_pts=path_ckpts, path_pt_best=path_pt_best, path_figs=path_figs)
         mode_train.start()
 
         pynvml.nvmlInit()
