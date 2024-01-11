@@ -16,10 +16,10 @@ device = torch.device('cuda:0')
 # PreEncoder
 paras_PreEncoder = {
     'num_measure_point': num_measure_point,
-    'num_pre_encoder': 20,
+    'num_pre_encoder': 100,
     'max_epochs': 200,
     'lr_init': 1e-3,
-    'size_middle': 64
+    'size_middle': 128
 }
 
 

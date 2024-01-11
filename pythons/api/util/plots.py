@@ -43,17 +43,18 @@ def plot_for_predicted_temperature(cell_name, temperature_prediction, temperatur
             plt.legend(loc='lower right')
 
 
-def plot_for_pre_encoder_test(test_results, num_measure_point):
+def plot_for_pre_encoder_val_test(_results, num_measure_point):
     plt.clf()
 
-    num_results = len(test_results)
+    num_results = len(_results)
     for i in range(num_results):
-        test_result = test_results[i]
+        _result = _results[i]
         plt.subplot(num_results, 1, i + 1)
-        for result_name, result in test_result.items():
+        for result_name, result in _result.items():
             for j in range(num_measure_point):
-                if result_name  == 'pre':
-                    plt.plot(result[0], result[4 + j], 'k-')
+                if result_name == 'pre':
+                    plt.plot(np.arange(0, result.shape[1], 1), result[4 + j], 'k-')
                 else:
-                    plt.plot(result[0], result[4 + j], 'k-.')
+                    plt.plot(np.arange(0, result.shape[1], 1), result[4 + j], 'k-.')
+        plt.grid(True)
 
