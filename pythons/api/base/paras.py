@@ -30,10 +30,10 @@ paras_PreEncoder = {
 paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
     'seq_history': 50,
-    'seq_predict': 1000,
+    'seq_predict': 200,
     'max_epochs': 200,
     'lr_init': 1e-3,
-    'size_middle': 32,
+    'size_middle': 16,
     'device': device
 }
 # 加载数据集

@@ -8,7 +8,7 @@ from torch.utils.data import Dataset
 class Prediction_Seq2Seq_Dataset(Dataset):
     def __init__(self, path_data_origin_pkl, paras, device):
         self.seq_history, self.seq_predict, device = paras['seq_history'], paras['seq_predict'], device
-        self.hop_length = 5
+        self.hop_length = 10
         self.data = self.load_from_pkl(path_data_origin_pkl)
 
     def load_from_pkl(self, path_data_origin_pkl):
