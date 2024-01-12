@@ -21,7 +21,7 @@ class Prediction_Seq2Seq_Dataset(Dataset):
             for group in range(data_slide.shape[-1]):
                 data = data_slide[:, :, group]
                 data = np.append(np.append(data[0:4], np.expand_dims(np.max(data[4:], axis=0), axis=0), axis=0), data[4:], axis=0)
-                data_load.append(torch.from_numpy(data).to(torch.float32))
+                data_load.append(torch.from_numpy(data.transpose()).to(torch.float32))
         return data_load
 
     def __len__(self):
