@@ -19,9 +19,9 @@ class PreEncoder_Dataset_Expand(Dataset):
             data = data[:, 0:self.num_pre_encoder]
             data = np.append(np.linspace(0, 1, self.num_pre_encoder).reshape(1, self.num_pre_encoder), data[1:], axis=0)
             for _ in range(self.num_expand):
-                random_expand = np.random.normal(0, 0.001, (data.shape[0]-1, data.shape[1]))
+                random_expand = np.random.normal(0, 0.001, (data.shape[0]-2, data.shape[1]))
                 data_expand = data.copy()
-                data_expand[1:] += random_expand
+                data_expand[2:] += random_expand
                 data_load.append(torch.from_numpy(data_expand).to(torch.float32))
         return data_load
 
