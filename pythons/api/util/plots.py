@@ -71,7 +71,7 @@ def plot_for_prediction_seq2seq_val_test(_results, num_measure_point):
         ax = plt.subplot(num_results, 1, i + 1)
         for result_name, result in _result.items():
             if result_name == 'pre':
-                plt.plot(np.arange(0, result.shape[1], 1), result[0], 'k-', label='pre_mean')
+                plt.plot(np.arange(0, result.shape[1], 1), result[0], 'r-', label='pre_mean')
                 # plt.plot(np.arange(0, result.shape[1], 1), result[0] + np.sqrt(result[1]) * 3, 'r-', label='pre_var_max')
                 # plt.plot(np.arange(0, result.shape[1], 1), result[0] - np.sqrt(result[1]) * 3, 'g-', label='pre_var_min')
                 x = np.append(np.arange(0, result.shape[1], 1), np.flip(np.arange(0, result.shape[1], 1)), axis=0)
