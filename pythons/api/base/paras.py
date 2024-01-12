@@ -16,12 +16,22 @@ device = torch.device('cuda:0')
 # PreEncoder
 paras_PreEncoder = {
     'num_measure_point': num_measure_point,
-    'num_pre_encoder': 100,
+    'num_pre_encoder': 1000,
     'max_epochs': 200,
     'lr_init': 1e-3,
-    'size_middle': 128
+    'size_middle': 16
 }
 
+# Prediction_Seq2Seq
+paras_Prediction_Seq2Seq = {
+    'num_measure_point': num_measure_point,
+    'seq_history': 50,
+    'seq_predict': 500,
+    'max_epochs': 200,
+    'lr_init': 1e-3,
+    'size_middle': 16,
+    'device': device
+}
 
 base_size = 32
 batch_size = 32

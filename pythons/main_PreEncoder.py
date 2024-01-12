@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader, random_split
 from api.models.pre_encoder import PreEncoder_LightningModule
 from api.datasets.pre_encoder import PreEncoder_Dataset_Expand, PreEncoder_Dataset_Origin
 from api.base.paras import device, paras_PreEncoder, num_measure_point
-from api.base.paths import path_data_origin_pkl, path_ckpts, path_figs_test, path_figs_val
+from api.base.paths import path_data_origin_pkl, path_ckpts, path_figs_test, path_figs_val, path_figs_train
 from api.util.plots import plot_for_pre_encoder_val_test
 
 if __name__ == '__main__':
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     # 模式选择
     mode_switch = {
         'Train_Validation_Test': True,
-        'Sample': False
+        'Sample': True
     }
 
     # 加载pytorch_lighting模型
@@ -45,8 +45,8 @@ if __name__ == '__main__':
     dataset_loader_test = DataLoader(test_set, batch_size=1, pin_memory=True, num_workers=1)
 
     # 设置训练器
-    early_stop_callback = EarlyStopping(monitor='loss_val', min_delta=0.01, patience=5, verbose=False, mode="min")
-    model_checkpoint = ModelCheckpoint(monitor='loss_val', save_top_k=1, mode='min')
+    early_stop_callback = EarlyStopping(monitor='loss_nll_val', min_delta=0.01, patience=5, verbose=False, mode="min")
+    model_checkpoint = ModelCheckpoint(monitor='loss_nll_val', save_top_k=1, mode='min')
     trainer = pl.Trainer(log_every_n_steps=1, max_epochs=paras_PreEncoder['max_epochs'],
                          default_root_dir=path_ckpts, accelerator='gpu', devices=1, callbacks=[early_stop_callback, model_checkpoint])
     if mode_switch['Train_Validation_Test']:
@@ -66,19 +66,19 @@ if __name__ == '__main__':
         _results = list()
         for batch in dataset_loader_train:
             data = batch[0]
-            inp_loc_i_soc = data[0:4, 1:]
+            inp_loc_i_soc = data[1:4, 1:]
             inp_temperature = data[4:, 0:1]
+            init_mean_var = torch.cat([torch.mean(inp_temperature, dim=0), torch.var(inp_temperature, dim=0)]).unsqueeze(1)
             with torch.no_grad():
-                pre_temperature = torch.cat([data[0:4],
-                                             torch.cat([inp_temperature, model(inp_loc_i_soc, inp_temperature)], dim=1)],
-                                            dim=0)
+                pre_mean_var = torch.cat([data[0:4], torch.cat([init_mean_var, model(inp_loc_i_soc.T, inp_temperature.T)], dim=1)], dim=0)
+
             ref_temperature = data
             _results.append({
-                'pre': pre_temperature.cpu().numpy(),
+                'pre': pre_mean_var.cpu().numpy(),
                 'ref': ref_temperature.cpu().numpy()
             })
         for i in range(0, len(_results), 1):
             _result = _results[i:i + 1]
             plot_for_pre_encoder_val_test(_result, num_measure_point)
-            plt.savefig(path_figs_test + f'{i}.png')
+            plt.savefig(path_figs_train + f'{i}.png')
             print(f'已保存{i}.png')
