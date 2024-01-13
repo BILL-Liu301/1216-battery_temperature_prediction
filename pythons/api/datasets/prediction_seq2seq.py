@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 import librosa.util as librosa_util
 from torch.utils.data import Dataset
+from scipy.ndimage import gaussian_filter
 
 
 class Prediction_Seq2Seq_Dataset(Dataset):
@@ -21,6 +22,10 @@ class Prediction_Seq2Seq_Dataset(Dataset):
             for group in range(data_slide.shape[-1]):
                 data = data_slide[:, :, group]
                 data = np.append(np.append(data[0:4], np.expand_dims(np.max(data[4:], axis=0), axis=0), axis=0), data[4:], axis=0)
+                data[4] = gaussian_filter(data[4], sigma=1.0)
+                # s, e = data[4, 0], data[4, -1]
+                # data[4] = np.convolve(data[4], np.ones((3,))/3, mode='same')
+                # data[4, 0], data[4, -1] = s, e
                 data_load.append(torch.from_numpy(data.transpose()).to(torch.float32))
         return data_load
 

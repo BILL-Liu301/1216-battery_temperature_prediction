@@ -58,7 +58,7 @@ class Prediction_Seq2seq_Model(nn.Module):
 
         # 对未来数据进行解码，并生成h_pre和c_pre
         lstmed_m_var, (h_pre, c_pre) = self.pre_lstm_m_var(inp_loc_i_soc, (h_his, c_his))
-        oup_m_ = self.pre_linear_layer_decoder_m_(lstmed_m_var) + temperature_start_his
+        oup_m_ = self.pre_linear_layer_decoder_m_(lstmed_m_var)
         oup_var = self.pre_linear_layer_decoder_var(lstmed_m_var)
 
         return oup_m_, oup_var, (h_pre, c_pre)
@@ -88,25 +88,26 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
         inp_temperature_his = batch[:, 0:self.seq_history, 4:5]
         inp_loc_i_soc = batch[:, self.seq_history:, 1:4]
         pre_mean, pre_var, _ = self.prediction_seq2seq(inp_loc_i_soc_his, inp_temperature_his, inp_loc_i_soc)
-        ref_mean = batch[:, self.seq_history:, 4:5]
+        ref_mean = batch[:, self.seq_history:, 4:5] - batch[:, (self.seq_history - 1):-1, 4:5]
         loss_train = self.criterion_train(pre_mean, ref_mean, pre_var)
 
         self.log('loss_train', loss_train, prog_bar=True, batch_size=len(batch))
         self.log('lr', self.scheduler.get_last_lr()[0], prog_bar=True, batch_size=len(batch))
         return loss_train
 
-    def test_step(self, batches, batch_idx):
-        inp_loc_i_soc_his = batches[:, 0:self.seq_history, 1:4]
-        inp_temperature_his = batches[:, 0:self.seq_history, 4:5]
-        inp_loc_i_soc = batches[:, self.seq_history:, 1:4]
+    def test_step(self, batch, batch_idx):
+        inp_loc_i_soc_his = batch[:, 0:self.seq_history, 1:4]
+        inp_temperature_his = batch[:, 0:self.seq_history, 4:5]
+        inp_loc_i_soc = batch[:, self.seq_history:, 1:4]
         with torch.no_grad():
             pre_mean, pre_var, _ = self.prediction_seq2seq(inp_loc_i_soc_his, inp_temperature_his, inp_loc_i_soc)
-        ref_mean = batches[:, self.seq_history:, 4:5]
-        for batch in range(len(batches)):
+        pre_mean = pre_mean + batch[:, (self.seq_history - 1):self.seq_history, 4:5]
+        ref_mean = batch[:, self.seq_history:, 4:5]
+        for b in range(len(batch)):
             self.test_results.append({
-                'ref': ref_mean[batch].T.cpu().numpy(),
-                'origin': batches[batch, self.seq_history:, 5:].T.cpu().numpy(),
-                'pre': torch.cat([pre_mean[batch], pre_var[batch]], dim=1).T.cpu().numpy()
+                'ref': ref_mean[b].T.cpu().numpy(),
+                'origin': batch[b, self.seq_history:, 5:].T.cpu().numpy(),
+                'pre': torch.cat([pre_mean[b], pre_var[b]], dim=1).T.cpu().numpy()
             })
 
     def validation_step(self, batch, batch_idx):
@@ -114,7 +115,7 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
         inp_temperature_his = batch[:, 0:self.seq_history, 4:5]
         inp_loc_i_soc = batch[:, self.seq_history:, 1:4]
         pre_mean, pre_var, _ = self.prediction_seq2seq(inp_loc_i_soc_his, inp_temperature_his, inp_loc_i_soc)
-        ref_mean = batch[:, self.seq_history:, 4:5]
+        ref_mean = batch[:, self.seq_history:, 4:5] - batch[:, (self.seq_history - 1):-1, 4:5]
         loss_nll = self.criterion_train(pre_mean, ref_mean, pre_var)
         loss_mse = self.criterion_val(pre_mean, ref_mean)
 

@@ -24,11 +24,11 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
 
     # 找到ckpt
-    path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
+    path_version = path_ckpts + 'lightning_logs/version_3/checkpoints/'
     ckpt = path_version + os.listdir(path_version)[0]
 
     # 设置训练器
-    trainer = pl.Trainer(accelerator='gpu', devices=1)
+    trainer = pl.Trainer(default_root_dir=path_ckpts, accelerator='gpu', devices=1)
     model = Prediction_Seq2seq_LightningModule.load_from_checkpoint(checkpoint_path=ckpt)
     trainer.test(model=model, dataloaders=paras_Prediction_Seq2Seq_dataset['dataset_loader_test'])
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
