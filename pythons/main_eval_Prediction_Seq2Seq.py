@@ -10,10 +10,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, ModelSum
 from torch.utils.data import DataLoader, random_split
 
 from api.base.paras import paras_Prediction_Seq2Seq, device, num_measure_point, paras_Prediction_Seq2Seq_dataset
-from api.datasets.prediction_seq2seq import Prediction_Seq2Seq_Dataset
 from api.models.prediction_seq2seq import Prediction_Seq2seq_LightningModule
-from api.base.paths import path_data_origin_pkl, path_ckpts, path_figs_test, path_figs_train, path_figs_val
-from api.util.plots import plot_for_prediction_seq2seq_val_test
+from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test
+from pythons.api.util.plots import plot_for_prediction_seq2seq_val_test
 
 if __name__ == '__main__':
     pl.seed_everything(2024)
@@ -24,14 +23,23 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
 
     # 找到ckpt
-    path_version = path_ckpts + 'lightning_logs/version_3/checkpoints/'
+    # path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
+    path_version = path_ckpt_best_version + 'version_0/checkpoints/'
     ckpt = path_version + os.listdir(path_version)[0]
 
     # 设置训练器
     trainer = pl.Trainer(default_root_dir=path_ckpts, accelerator='gpu', devices=1)
     model = Prediction_Seq2seq_LightningModule.load_from_checkpoint(checkpoint_path=ckpt)
-    trainer.test(model=model, dataloaders=paras_Prediction_Seq2Seq_dataset['dataset_loader_test'])
+    dataloaders = paras_Prediction_Seq2Seq_dataset['dataset_loader_test']
+    trainer.test(model=model, dataloaders=dataloaders)
+
+    # 结果展示
+    loss_mean, loss_max, loss_min = torch.cat(model.test_losses['mean'], dim=0), torch.cat(model.test_losses['max'], dim=0), torch.cat(model.test_losses['min'], dim=0)
+    print(f'总计有{len(dataloaders.dataset)}组数据')
+    print(f'平均均值误差：{loss_mean.mean()}K')
+    print(f'平均最大误差：{loss_max.mean()}K')
+    print(f'平均最小误差：{loss_min.mean()}K')
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_results = model.test_results[i:i + 1]
-        plot_for_prediction_seq2seq_val_test(test_results, num_measure_point)
+        plot_for_prediction_seq2seq_val_test(test_results, paras_Prediction_Seq2Seq)
         plt.savefig(path_figs_test + f'{i}.png')

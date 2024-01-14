@@ -7,9 +7,9 @@ from scipy.ndimage import gaussian_filter
 
 
 class Prediction_Seq2Seq_Dataset(Dataset):
-    def __init__(self, path_data_origin_pkl, paras, device):
-        self.seq_history, self.seq_predict, device = paras['seq_history'], paras['seq_predict'], device
-        self.hop_length = 10
+    def __init__(self, path_data_origin_pkl, paras):
+        self.seq_history, self.seq_predict, self.scale = paras['seq_history'], paras['seq_predict'], paras['scale']
+        self.hop_length = 5
         self.data = self.load_from_pkl(path_data_origin_pkl)
 
     def load_from_pkl(self, path_data_origin_pkl):
@@ -22,10 +22,7 @@ class Prediction_Seq2Seq_Dataset(Dataset):
             for group in range(data_slide.shape[-1]):
                 data = data_slide[:, :, group]
                 data = np.append(np.append(data[0:4], np.expand_dims(np.max(data[4:], axis=0), axis=0), axis=0), data[4:], axis=0)
-                data[4] = gaussian_filter(data[4], sigma=1.0)
-                # s, e = data[4, 0], data[4, -1]
-                # data[4] = np.convolve(data[4], np.ones((3,))/3, mode='same')
-                # data[4, 0], data[4, -1] = s, e
+                data[4] = gaussian_filter(data[4], sigma=1.0) * self.scale
                 data_load.append(torch.from_numpy(data.transpose()).to(torch.float32))
         return data_load
 
