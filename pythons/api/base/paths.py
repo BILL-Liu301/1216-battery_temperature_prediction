@@ -7,7 +7,8 @@ path_figs_train = path_figs + "train/"
 path_figs_test = path_figs + "test/"
 path_figs_val = path_figs + "val/"
 
-path_data_t9m = 'E:/working_places/1216-battery_temperature_prediction/datas/T9M充电数据汲内阻-to华工.xlsx'
+path_code = 'E:/working_places/1216-battery_temperature_prediction/'
+path_data_t9m = path_code + 'datas/T9M充电数据汲内阻-to华工.xlsx'
+path_ckpt_best_version = path_code + 'best_version/'
 path_data_origin_pkl = path_dataset + 'dataset.pkl'
-path_result = path_base + "result.txt"
-path_pt_best = path_ckpts + "00_best.pt"
+path_result = path_base + 'result.txt'
