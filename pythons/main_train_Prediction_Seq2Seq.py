@@ -1,21 +1,13 @@
-import os
 import shutil
-
-import torch
+import warnings
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import warnings
-from tqdm import tqdm
-
 from lightning_fabric.utilities.warnings import PossibleUserWarning
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, ModelSummary, GradientAccumulationScheduler, Timer
-from torch.utils.data import DataLoader, random_split
 
-from api.base.paras import paras_Prediction_Seq2Seq, paras_Prediction_Seq2Seq_dataset, num_measure_point
-from api.datasets.prediction_seq2seq import Prediction_Seq2Seq_Dataset
+from api.base.paras import paras_Prediction_Seq2Seq, paras_Prediction_Seq2Seq_dataset
 from api.models.prediction_seq2seq import Prediction_Seq2seq_LightningModule
-from api.base.paths import path_data_origin_pkl, path_ckpts, path_figs_test, path_figs_train, path_figs_val
-from api.util.plots import plot_for_prediction_seq2seq_val_test
+from api.base.paths import path_ckpts
 
 if __name__ == '__main__':
     pl.seed_everything(2024)

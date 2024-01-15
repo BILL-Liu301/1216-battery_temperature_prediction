@@ -6,10 +6,8 @@ import warnings
 from tqdm import tqdm
 
 from lightning_fabric.utilities.warnings import PossibleUserWarning
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, ModelSummary
-from torch.utils.data import DataLoader, random_split
 
-from api.base.paras import paras_Prediction_Seq2Seq, device, num_measure_point, paras_Prediction_Seq2Seq_dataset
+from api.base.paras import paras_Prediction_Seq2Seq, paras_Prediction_Seq2Seq_dataset
 from api.models.prediction_seq2seq import Prediction_Seq2seq_LightningModule
 from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test
 from pythons.api.util.plots import plot_for_prediction_seq2seq_val_test
