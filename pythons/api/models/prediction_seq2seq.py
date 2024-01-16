@@ -119,7 +119,7 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
             self.test_results.append({
                 'origin': torch.cat([batch[b, self.seq_history:, 0:1], batch[b, self.seq_history:, 5:]], dim=1).T.cpu().numpy(),
                 'pre': torch.cat([pre_mean[b] / self.scale, pre_var[b]], dim=1).T.cpu().numpy(),
-                'ref': ref_mean[b].T.cpu().numpy() / self.scale,
+                'ref': torch.cat([batch[b, :, 0:1], batch[b, :, 4:5] / self.scale], dim=1).T.cpu().numpy()
             })
             loss = losses[b]
             self.test_losses['mean'].append(loss.mean().unsqueeze(0))
