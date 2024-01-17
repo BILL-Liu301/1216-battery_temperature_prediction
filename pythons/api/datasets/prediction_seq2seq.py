@@ -21,8 +21,8 @@ class Prediction_Seq2Seq_Dataset(Dataset):
             data_slide = librosa_util.frame(x=data_origin, frame_length=(self.seq_history + self.seq_predict), hop_length=self.hop_length)
             for group in range(data_slide.shape[-1]):
                 data = data_slide[:, :, group]
-                data = np.append(np.append(data[0:4], np.expand_dims(np.max(data[4:], axis=0), axis=0), axis=0), data[4:], axis=0)
-                data[4] = gaussian_filter(data[4], sigma=1.0) * self.scale
+                data = np.append(np.append(data[0:7], np.expand_dims(np.max(data[7:], axis=0), axis=0), axis=0), data[7:], axis=0)
+                data[7] = gaussian_filter(data[7], sigma=1.0) * self.scale
                 data_load.append(torch.from_numpy(data.transpose()).to(torch.float32))
         return data_load
 
