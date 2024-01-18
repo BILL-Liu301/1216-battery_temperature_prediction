@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
+import torch.distributions as D
 import pytorch_lightning as pl
 
 
@@ -24,7 +25,7 @@ class Prediction_Seq2seq_Model(nn.Module):
         self.multi_head = paras['multi_head']
         self.device = paras['device']
         self.scale = paras['scale']
-        self.delta_limit_m_ = 2
+        self.delta_limit_m_ = 20
         self.delta_limit_var = 5
         self.info_len = 6
 
@@ -82,8 +83,8 @@ class Prediction_Seq2seq_Model(nn.Module):
         lstmed = self.pre_norm_m_var(lstmed)
         attention_q, attention_k, attention_v = self.pre_attention_q(lstmed), self.pre_attention_k(lstmed), self.pre_attention_v(lstmed)
         attentioned = self.self_attention([attention_q, attention_k, attention_v])
-        oup_m_ = self.pre_linear_layer_decoder_m_(attentioned) * self.delta_limit_m_
-        oup_m_ = oup_m_.cumsum(dim=1) + inp_temperature_his[:, -1:]
+        oup_m_ = self.pre_linear_layer_decoder_m_(attentioned) * self.delta_limit_m_ + inp_temperature_his[:, -1:]
+        # oup_m_ = oup_m_.cumsum(dim=1) + inp_temperature_his[:, -1:]
         oup_var = self.pre_linear_layer_decoder_var(attentioned) * self.delta_limit_var
 
         return oup_m_, oup_var, (h_his, c_his)
@@ -136,11 +137,14 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
             pre_mean, pre_var, ref_mean = self.run_base(batch, batch_idx)
         losses = self.criterion_test(pre_mean, ref_mean)
         for b in range(len(batch)):
+            dis = D.Normal(pre_mean[b], torch.sqrt(pre_var[b]))
+            prob = torch.exp(dis.log_prob(ref_mean))
             self.test_results.append({
                 'origin': torch.cat([batch[b, self.seq_history:, 0:1], batch[b, self.seq_history:, 8:]], dim=1).T.cpu().numpy(),
                 'pre': torch.cat([pre_mean[b], pre_var[b]], dim=1).T.cpu().numpy(),
                 'ref': torch.cat([batch[b, :, 0:1], batch[b, :, 7:8]], dim=1).T.cpu().numpy(),
-                'loss': losses[b],
+                'loss': losses[b].T.cpu().numpy(),
+                'prob': prob.cpu().numpy(),
                 'info': batch[b, self.seq_history:, 1:7].T.cpu().numpy()
             })
             loss = losses[b]

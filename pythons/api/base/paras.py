@@ -22,7 +22,7 @@ paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
     'seq_history': 10,
     'seq_predict': 100,
-    'split_length': 10,  # 取点间隔，间隔为n个数时，split_length=n+1
+    'split_length': 5,  # 取点间隔，间隔为n个数时，split_length=n+1
     'max_epochs': 100,
     'lr_init': 1e-3,
     'size_middle': 16,

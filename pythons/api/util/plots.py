@@ -9,7 +9,7 @@ def plot_for_prediction_seq2seq_val_test(_result, paras):
     info = _result['info']
 
     # 结果展示
-    ax = plt.subplot(3, 1, 1)
+    ax = plt.subplot(6, 1, 1)
     for result_name, result in _result.items():
         if result_name == 'pre':
             plt.plot(xx, result[0], 'r-', label='pre_mean')
@@ -34,8 +34,20 @@ def plot_for_prediction_seq2seq_val_test(_result, paras):
     plt.grid(True)
     plt.legend(loc='lower right')
 
+    # 概率密度
+    plt.subplot(6, 1, 2)
+    plt.plot(xx, _result['prob'][0, :, 0], 'r', label='Prob')
+    plt.grid(True)
+    plt.legend(loc='lower right')
+
+    # 概率密度
+    plt.subplot(6, 1, 3)
+    plt.plot(xx, _result['loss'][0], 'r', label='Loss')
+    plt.grid(True)
+    plt.legend(loc='lower right')
+
     # 输入：NTC温度
-    plt.subplot(3, 1, 2)
+    plt.subplot(6, 1, 4)
     plt.plot(xx, info[1], 'r', label='NTC-HEIGHT')
     plt.plot(xx, info[2], 'b', label='NTC-LOW')
     plt.grid(True)
@@ -50,7 +62,9 @@ def plot_for_prediction_seq2seq_val_test(_result, paras):
 
     # 输入：SOC
     plt.subplot(6, 1, 6)
-    plt.plot(xx, info[5], 'r', label='SOC')
+    plt.plot(xx, info[5], 'r', label='SOC/%')
     plt.grid(True)
     plt.legend(loc='lower right')
+
+
 
