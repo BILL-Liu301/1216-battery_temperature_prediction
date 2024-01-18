@@ -28,6 +28,7 @@ if __name__ == '__main__':
         data_np_origin[:, 0] = duration
         data_np_origin[:, 1] = cell_location
         data_np_origin[:, 2:7] = np.asarray(data_xlsx[['最高温-BMS-NTC', '最低温-BMS-NTC', '平均电压', '电流', 'SOC']])[0:duration.shape[0]]
+        data_np_origin[:, 2:4] = data_np_origin[:, 2:4] + K
         data_np_origin[:, 7:] = np.asarray(data_xlsx[temperature_measure_points[cell_name]])[0:duration.shape[0]] + K
         data_dict_origin.update({cell_name: data_np_origin.copy().transpose()})
     # 保存数据

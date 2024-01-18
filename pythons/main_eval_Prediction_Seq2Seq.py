@@ -38,6 +38,6 @@ if __name__ == '__main__':
     print(f'平均最大误差：{loss_max.mean()}K')
     print(f'平均最小误差：{loss_min.mean()}K')
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
-        test_results = model.test_results[i:i + 1]
+        test_results = model.test_results[i]
         plot_for_prediction_seq2seq_val_test(test_results, paras_Prediction_Seq2Seq)
         plt.savefig(path_figs_test + f'{i}.png')

@@ -20,13 +20,16 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Prediction_Seq2Seq
 paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
-    'seq_history': 50,
-    'seq_predict': 500,
+    'seq_history': 10,
+    'seq_predict': 100,
+    'split_length': 10,  # 取点间隔，间隔为n个数时，split_length=n+1
     'max_epochs': 100,
     'lr_init': 1e-3,
-    'size_middle': 32,
+    'size_middle': 16,
+    'num_layers': 2,
+    'multi_head': 2,
     'device': device,
-    'scale': 50
+    'scale': 100
 }
 if os.path.exists(path_data_origin_pkl):
     # 加载数据集
@@ -34,11 +37,11 @@ if os.path.exists(path_data_origin_pkl):
                                               paras=paras_Prediction_Seq2Seq)
 
     # 分割train, test, val，并进行数据加载
-    train_valid_set_size = int(len(dataset_base) * 0.9)
+    train_valid_set_size = int(len(dataset_base) * 0.8)
     test_set_size = len(dataset_base) - train_valid_set_size
     train_valid_set, test_set = random_split(dataset_base, [train_valid_set_size, test_set_size])
 
-    train_set_size = int(len(train_valid_set) * 0.9)
+    train_set_size = int(len(train_valid_set) * 0.8)
     valid_set_size = len(train_valid_set) - train_set_size
     train_set, valid_set = random_split(train_valid_set, [train_set_size, valid_set_size])
 
