@@ -1,8 +1,11 @@
+import math
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import torch.distributions as D
+from scipy.stats import norm
 import pytorch_lightning as pl
 
 
@@ -137,14 +140,13 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
             pre_mean, pre_var, ref_mean = self.run_base(batch, batch_idx)
         losses = self.criterion_test(pre_mean, ref_mean)
         for b in range(len(batch)):
-            dis = D.Normal(pre_mean[b], torch.sqrt(pre_var[b]))
-            prob = torch.exp(dis.log_prob(ref_mean))
+            prob = np.abs(norm.cdf(ref_mean[b].cpu().numpy(), pre_mean[b].cpu().numpy(), torch.sqrt(pre_var[b]).cpu().numpy()) - 0.5) * 2
             self.test_results.append({
                 'origin': torch.cat([batch[b, self.seq_history:, 0:1], batch[b, self.seq_history:, 8:]], dim=1).T.cpu().numpy(),
                 'pre': torch.cat([pre_mean[b], pre_var[b]], dim=1).T.cpu().numpy(),
                 'ref': torch.cat([batch[b, :, 0:1], batch[b, :, 7:8]], dim=1).T.cpu().numpy(),
                 'loss': losses[b].T.cpu().numpy(),
-                'prob': prob.cpu().numpy(),
+                'prob': prob,
                 'info': batch[b, self.seq_history:, 1:7].T.cpu().numpy()
             })
             loss = losses[b]
