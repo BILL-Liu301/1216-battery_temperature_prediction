@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
-import torch.distributions as D
 from scipy.stats import norm
 import pytorch_lightning as pl
 
@@ -44,21 +43,22 @@ class Prediction_Seq2seq_Model(nn.Module):
         # 分为两部分：
         #       m_：均值/最大值/最小值
         #       var：方差
+        self.pre_norm_inp = nn.LayerNorm(normalized_shape=self.info_len, elementwise_affine=False)
+        self.pre_attention_q = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
+                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
+        self.pre_attention_k = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
+                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
+        self.pre_attention_v = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
+                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
         self.h0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
         self.c0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
-        self.pre_lstm_m_var = nn.LSTM(input_size=self.info_len, hidden_size=self.size_middle, num_layers=self.num_layers, bidirectional=self.lstm_bidirectional,
+        self.pre_lstm_m_var = nn.LSTM(input_size=self.size_middle, hidden_size=self.size_middle, num_layers=self.num_layers, bidirectional=self.lstm_bidirectional,
                                       bias=self.bias, batch_first=True)
         self.pre_norm_m_var = nn.LayerNorm(normalized_shape=self.D * self.size_middle, elementwise_affine=False)
-        self.pre_attention_q = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_attention_k = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_attention_v = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_linear_layer_decoder_m_ = nn.Sequential(nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias),
+        self.pre_linear_layer_decoder_m_ = nn.Sequential(nn.ReLU(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
                                                          nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=1, bias=self.bias),
                                                          nn.Tanh())
-        self.pre_linear_layer_decoder_var = nn.Sequential(nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias),
+        self.pre_linear_layer_decoder_var = nn.Sequential(nn.ReLU(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
                                                           nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=1, bias=self.bias),
                                                           nn.Sigmoid())
 
@@ -82,13 +82,14 @@ class Prediction_Seq2seq_Model(nn.Module):
 
         # 对未来数据进行解码，并生成h_pre和c_pre
         batch_size = inp_info.shape[0]
-        lstmed, _ = self.pre_lstm_m_var(inp_info, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
-        lstmed = self.pre_norm_m_var(lstmed)
-        attention_q, attention_k, attention_v = self.pre_attention_q(lstmed), self.pre_attention_k(lstmed), self.pre_attention_v(lstmed)
+        inp_info = self.pre_norm_inp(inp_info)
+        attention_q, attention_k, attention_v = self.pre_attention_q(inp_info), self.pre_attention_k(inp_info), self.pre_attention_v(inp_info)
         attentioned = self.self_attention([attention_q, attention_k, attention_v])
-        oup_m_ = self.pre_linear_layer_decoder_m_(attentioned) * self.delta_limit_m_ + inp_temperature_his[:, -1:]
+        lstmed, _ = self.pre_lstm_m_var(attentioned, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
+        lstmed = self.pre_norm_m_var(lstmed)
+        oup_m_ = self.pre_linear_layer_decoder_m_(lstmed) * self.delta_limit_m_ + inp_temperature_his[:, -1:]
         # oup_m_ = oup_m_.cumsum(dim=1) + inp_temperature_his[:, -1:]
-        oup_var = self.pre_linear_layer_decoder_var(attentioned) * self.delta_limit_var
+        oup_var = self.pre_linear_layer_decoder_var(lstmed) * self.delta_limit_var
 
         return oup_m_, oup_var, (h_his, c_his)
 
@@ -145,8 +146,8 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
                 'origin': torch.cat([batch[b, self.seq_history:, 0:1], batch[b, self.seq_history:, 8:]], dim=1).T.cpu().numpy(),
                 'pre': torch.cat([pre_mean[b], pre_var[b]], dim=1).T.cpu().numpy(),
                 'ref': torch.cat([batch[b, :, 0:1], batch[b, :, 7:8]], dim=1).T.cpu().numpy(),
-                'loss': losses[b].T.cpu().numpy(),
-                'prob': prob,
+                'loss': losses[b].T.cpu().numpy()[0],
+                'prob': prob * 100,
                 'info': batch[b, self.seq_history:, 1:7].T.cpu().numpy()
             })
             loss = losses[b]

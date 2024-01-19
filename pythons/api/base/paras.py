@@ -20,13 +20,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Prediction_Seq2Seq
 paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
-    'seq_history': 10,
-    'seq_predict': 100,
-    'split_length': 5,  # 取点间隔，间隔为n个数时，split_length=n+1
+    'seq_history': 5,
+    'seq_predict': 200,
+    'split_length': 3,  # 取点间隔，间隔为n个数时，split_length=n+1
     'max_epochs': 100,
     'lr_init': 1e-3,
     'size_middle': 16,
-    'num_layers': 2,
+    'num_layers': 4,
     'multi_head': 2,
     'device': device,
     'scale': 100
@@ -45,9 +45,9 @@ if os.path.exists(path_data_origin_pkl):
     valid_set_size = len(train_valid_set) - train_set_size
     train_set, valid_set = random_split(train_valid_set, [train_set_size, valid_set_size])
 
-    dataset_loader_train = DataLoader(train_set, batch_size=8, shuffle=True, pin_memory=True, num_workers=0)
-    dataset_loader_val = DataLoader(valid_set, batch_size=8, pin_memory=True, num_workers=0)
-    dataset_loader_test = DataLoader(test_set, batch_size=1, pin_memory=True, num_workers=0)
+    dataset_loader_train = DataLoader(train_set, batch_size=32, shuffle=True, pin_memory=True, num_workers=0)
+    dataset_loader_val = DataLoader(valid_set, batch_size=32, pin_memory=True, num_workers=0)
+    dataset_loader_test = DataLoader(test_set, batch_size=5, pin_memory=True, num_workers=0)
     paras_Prediction_Seq2Seq_dataset = {
         'dataset_loader_train': dataset_loader_train,
         'dataset_loader_val': dataset_loader_val,
