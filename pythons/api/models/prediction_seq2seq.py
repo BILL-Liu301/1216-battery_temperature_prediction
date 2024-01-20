@@ -87,18 +87,22 @@ class Prediction_Seq2seq_Model(nn.Module):
         encoded_info = self.pre_linear_layer_encoder_info(inp_info)
         inp_info = self.pre_norm_inp(inp_info)
         seqs = (self.seq_predict // self.seq_attention_once) if (self.seq_predict % self.seq_attention_once == 0) else (self.seq_predict // self.seq_attention_once + 1)
-        attentioned = list()
+        encoded = list()
+        oup_m_, oup_var = list(), list()
+        temperature_ref = inp_temperature_his[:, -1:]
         for seq in range(seqs):
             inp_info_temp = inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
             encoded_info_temp = encoded_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
             attention_q, attention_k, attention_v = self.pre_attention_q(inp_info_temp), self.pre_attention_k(inp_info_temp), self.pre_attention_v(inp_info_temp)
-            attentioned.append(self.self_attention([attention_q, attention_k, attention_v]) + encoded_info_temp)
-        attentioned = torch.cat(attentioned, dim=1)
-        lstmed, _ = self.pre_lstm_m_var(attentioned, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
-        lstmed = self.pre_norm_m_var(lstmed)
-        oup_m_ = self.pre_linear_layer_decoder_m_(lstmed) * self.delta_limit_m_ + inp_temperature_his[:, -1:]
-        # oup_m_ = oup_m_.cumsum(dim=1) + inp_temperature_his[:, -1:]
-        oup_var = self.pre_linear_layer_decoder_var(lstmed) * self.delta_limit_var
+            attentioned = self.self_attention([attention_q, attention_k, attention_v]) + encoded_info_temp
+            lstmed, _ = self.pre_lstm_m_var(attentioned, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
+            encoded = self.pre_norm_m_var(lstmed)
+            oup_m_.append(self.pre_linear_layer_decoder_m_(encoded) * self.delta_limit_m_ + temperature_ref)
+            # oup_m_ = oup_m_.cumsum(dim=1) + temperature_ref
+            oup_var.append(self.pre_linear_layer_decoder_var(encoded) * self.delta_limit_var)
+            temperature_ref = oup_m_[-1][:, -1:]
+        oup_m_ = torch.cat(oup_m_, dim=1)
+        oup_var = torch.cat(oup_var, dim=1)
 
         return oup_m_, oup_var, (h_his, c_his)
 

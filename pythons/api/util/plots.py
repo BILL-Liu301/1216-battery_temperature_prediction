@@ -37,7 +37,7 @@ def plot_for_prediction_seq2seq_val_test(_result, paras):
     plt.plot([xx[0], xx[-1]], [95.45, 95.45], 'b--', label='2σ')
     plt.plot([xx[0], xx[-1]], [68.27, 68.27], 'g--', label='1σ')
     plt.plot(xx, _result['prob'], 'k', label='Prob')
-    for p in np.where(_result['prob'] > 95.45)[0]:
+    for p in np.where(_result['prob'] > 99.73)[0]:
         plt.bar(xx[p], _result['prob'][p], width=1, color='r')
     plt.xlim(xlim)
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
