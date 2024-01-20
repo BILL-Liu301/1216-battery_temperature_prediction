@@ -22,9 +22,9 @@ class Prediction_Seq2seq_Model(nn.Module):
             self.D = 1
         self.seq_history = paras['seq_history']
         self.seq_predict = paras['seq_predict']
+        self.seq_attention_once = paras['seq_attention_once']
         self.size_middle = paras['size_middle']
         self.num_layers = paras['num_layers']
-        self.multi_head = paras['multi_head']
         self.device = paras['device']
         self.scale = paras['scale']
         self.delta_limit_m_ = 20
@@ -44,6 +44,8 @@ class Prediction_Seq2seq_Model(nn.Module):
         #       m_：均值/最大值/最小值
         #       var：方差
         self.pre_norm_inp = nn.LayerNorm(normalized_shape=self.info_len, elementwise_affine=False)
+        self.pre_linear_layer_encoder_info = nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
+                                                           nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
         self.pre_attention_q = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
                                              nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
         self.pre_attention_k = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
@@ -82,9 +84,16 @@ class Prediction_Seq2seq_Model(nn.Module):
 
         # 对未来数据进行解码，并生成h_pre和c_pre
         batch_size = inp_info.shape[0]
+        encoded_info = self.pre_linear_layer_encoder_info(inp_info)
         inp_info = self.pre_norm_inp(inp_info)
-        attention_q, attention_k, attention_v = self.pre_attention_q(inp_info), self.pre_attention_k(inp_info), self.pre_attention_v(inp_info)
-        attentioned = self.self_attention([attention_q, attention_k, attention_v])
+        seqs = (self.seq_predict // self.seq_attention_once) if (self.seq_predict % self.seq_attention_once == 0) else (self.seq_predict // self.seq_attention_once + 1)
+        attentioned = list()
+        for seq in range(seqs):
+            inp_info_temp = inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
+            encoded_info_temp = encoded_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
+            attention_q, attention_k, attention_v = self.pre_attention_q(inp_info_temp), self.pre_attention_k(inp_info_temp), self.pre_attention_v(inp_info_temp)
+            attentioned.append(self.self_attention([attention_q, attention_k, attention_v]) + encoded_info_temp)
+        attentioned = torch.cat(attentioned, dim=1)
         lstmed, _ = self.pre_lstm_m_var(attentioned, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
         lstmed = self.pre_norm_m_var(lstmed)
         oup_m_ = self.pre_linear_layer_decoder_m_(lstmed) * self.delta_limit_m_ + inp_temperature_his[:, -1:]

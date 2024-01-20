@@ -21,13 +21,13 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
     'seq_history': 5,
-    'seq_predict': 200,
-    'split_length': 3,  # 取点间隔，间隔为n个数时，split_length=n+1
+    'seq_predict': 500,
+    'seq_attention_once': 50,
+    'split_length': 2,  # 取点间隔，间隔为n个数时，split_length=n+1
     'max_epochs': 100,
     'lr_init': 1e-3,
     'size_middle': 16,
-    'num_layers': 4,
-    'multi_head': 2,
+    'num_layers': 6,
     'device': device,
     'scale': 100
 }

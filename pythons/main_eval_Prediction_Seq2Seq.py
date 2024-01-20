@@ -27,7 +27,7 @@ if __name__ == '__main__':
 
     # 设置训练器
     trainer = pl.Trainer(default_root_dir=path_ckpts, accelerator='gpu', devices=1)
-    model = Prediction_Seq2seq_LightningModule.load_from_checkpoint(checkpoint_path=ckpt)
+    model = Prediction_Seq2seq_LightningModule.load_from_checkpoint(checkpoint_path=ckpt, paras=paras_Prediction_Seq2Seq)
     dataloaders = paras_Prediction_Seq2Seq_dataset['dataset_loader_test']
     trainer.test(model=model, dataloaders=dataloaders)
 

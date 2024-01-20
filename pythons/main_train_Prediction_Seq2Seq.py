@@ -31,7 +31,7 @@ if __name__ == '__main__':
     model_summery = ModelSummary(max_depth=2)
     # gradient_accumulation_scheduler = GradientAccumulationScheduler({5: 2})
     timer = Timer(duration='00:00:10:00', verbose=True)
-    trainer = pl.Trainer(log_every_n_steps=1, max_epochs=paras_Prediction_Seq2Seq['max_epochs'], check_val_every_n_epoch=1,
+    trainer = pl.Trainer(log_every_n_steps=1, max_epochs=paras_Prediction_Seq2Seq['max_epochs'], check_val_every_n_epoch=2,
                          default_root_dir=path_ckpts, accelerator='gpu', devices=1,
                          callbacks=[early_stop_callback, model_checkpoint, model_summery, timer])
     trainer.fit(model=prediction_seq2seq, train_dataloaders=paras_Prediction_Seq2Seq_dataset['dataset_loader_train'],
