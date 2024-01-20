@@ -12,6 +12,7 @@ if flag:
     print("正在删除...")
     shutil.rmtree(path_base)
 
+    print("正在创建...")
     os.mkdir(path_base)
 
     os.mkdir(path_dataset)
