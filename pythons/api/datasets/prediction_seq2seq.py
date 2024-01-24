@@ -2,8 +2,10 @@ import torch
 import pickle
 import numpy as np
 import librosa.util as librosa_util
-from torch.utils.data import Dataset
-from scipy.ndimage import gaussian_filter
+from torch.utils.data import Dataset, random_split, DataLoader
+
+from pythons.api.base.paras import paras_Prediction_Seq2Seq
+from pythons.api.base.paths import path_data_origin_pkl
 
 
 class Prediction_Seq2Seq_Dataset(Dataset):
@@ -41,3 +43,26 @@ class Prediction_Seq2Seq_Dataset(Dataset):
 
     def __getitem__(self, item):
         return self.data[item]
+
+
+# 加载数据集
+dataset_base = Prediction_Seq2Seq_Dataset(path_data_origin_pkl=path_data_origin_pkl,
+                                          paras=paras_Prediction_Seq2Seq)
+
+# 分割train, test, val，并进行数据加载
+train_valid_set_size = int(len(dataset_base) * 0.8)
+test_set_size = len(dataset_base) - train_valid_set_size
+train_valid_set, test_set = random_split(dataset_base, [train_valid_set_size, test_set_size])
+
+train_set_size = int(len(train_valid_set) * 0.8)
+valid_set_size = len(train_valid_set) - train_set_size
+train_set, valid_set = random_split(train_valid_set, [train_set_size, valid_set_size])
+
+dataset_loader_train = DataLoader(train_set, batch_size=16, shuffle=True, pin_memory=True, num_workers=0)
+dataset_loader_val = DataLoader(valid_set, batch_size=16, pin_memory=True, num_workers=0)
+dataset_loader_test = DataLoader(test_set, batch_size=5, pin_memory=True, num_workers=0)
+paras_Prediction_Seq2Seq_dataset = {
+    'dataset_loader_train': dataset_loader_train,
+    'dataset_loader_val': dataset_loader_val,
+    'dataset_loader_test': dataset_loader_test
+}

@@ -1,10 +1,5 @@
-import os
 import torch
-from torch.utils.data import DataLoader, random_split
 import pytorch_lightning as pl
-
-from pythons.api.base.paths import path_data_origin_pkl
-from pythons.api.datasets.prediction_seq2seq import Prediction_Seq2Seq_Dataset
 
 pl.seed_everything(2024)
 
@@ -31,25 +26,19 @@ paras_Prediction_Seq2Seq = {
     'device': device,
     'scale': 100
 }
-if os.path.exists(path_data_origin_pkl):
-    # 加载数据集
-    dataset_base = Prediction_Seq2Seq_Dataset(path_data_origin_pkl=path_data_origin_pkl,
-                                              paras=paras_Prediction_Seq2Seq)
 
-    # 分割train, test, val，并进行数据加载
-    train_valid_set_size = int(len(dataset_base) * 0.8)
-    test_set_size = len(dataset_base) - train_valid_set_size
-    train_valid_set, test_set = random_split(dataset_base, [train_valid_set_size, test_set_size])
+# Prediction_Seq2Seq_All
+paras_Prediction_Seq2Seq_All = {
+    'length_env_info': 6,
+    'seq_history': 5,
+    'seq_predict': 100,  # 100和600
+    'seq_attention_once': 50,
+    'split_length': 2,  # 取点间隔，间隔为n个数时，split_length=n+1
+    'max_epochs': 100,
+    'lr_init': 1e-3,
+    'size_middle': 16,
+    'num_layers': 4,
+    'device': device,
+    'scale': 100
+}
 
-    train_set_size = int(len(train_valid_set) * 0.8)
-    valid_set_size = len(train_valid_set) - train_set_size
-    train_set, valid_set = random_split(train_valid_set, [train_set_size, valid_set_size])
-
-    dataset_loader_train = DataLoader(train_set, batch_size=16, shuffle=True, pin_memory=True, num_workers=0)
-    dataset_loader_val = DataLoader(valid_set, batch_size=16, pin_memory=True, num_workers=0)
-    dataset_loader_test = DataLoader(test_set, batch_size=5, pin_memory=True, num_workers=0)
-    paras_Prediction_Seq2Seq_dataset = {
-        'dataset_loader_train': dataset_loader_train,
-        'dataset_loader_val': dataset_loader_val,
-        'dataset_loader_test': dataset_loader_test
-    }

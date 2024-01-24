@@ -6,7 +6,8 @@ import pytorch_lightning as pl
 from lightning_fabric.utilities.warnings import PossibleUserWarning
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping, ModelSummary, GradientAccumulationScheduler, Timer
 
-from api.base.paras import paras_Prediction_Seq2Seq, paras_Prediction_Seq2Seq_dataset
+from api.base.paras import paras_Prediction_Seq2Seq
+from api.datasets.prediction_seq2seq import paras_Prediction_Seq2Seq_dataset
 from api.models.prediction_seq2seq import Prediction_Seq2seq_LightningModule
 from api.base.paths import path_ckpts
 
