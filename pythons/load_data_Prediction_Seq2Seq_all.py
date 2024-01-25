@@ -49,8 +49,6 @@ if __name__ == '__main__':
 
     # 数据中只有两个模组，每个模组内100个电芯，每四个电芯为1组，所以每个模组内25组
     for module in tqdm(range(2), desc='Module', leave=False, ncols=100, disable=False):
-        if module == 0:
-            continue
         # 提取基本的时间戳、电压、电流和soc
         stamp, voltage, current, soc = (np.asarray(data_xlsx_state['时间']).reshape(-1, 1), np.asarray(data_xlsx_state['电压-总']).reshape(-1, 1),
                                         np.asarray(data_xlsx_state['电流']).reshape(-1, 1), np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))

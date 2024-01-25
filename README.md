@@ -24,21 +24,42 @@ load_data之后，不做任何处理，在各自的dataloader内进行处理。
 Pre_Encoder用于对前半部分的温度分布进行预测，目前是预测七个测温点各自的温度。  
 先计算初始温度的均值、方差和分布，然后通过Cross_Attention预测均值与方差随时间的变化，以及分布随时间的变化，最后进行反算。
 
-# 03 Seq2Seq单模型方案
+# 03 & 04 
+# 单模型预测单电芯
 ## 数据处理方面
 load_data之后，不做任何处理，在各自的dataloader内进行处理。  
 在dataloader内，用滑动窗口的方式提取数据，并每隔1个点提取一个数据点。模型输入数据包含六个变量，分别是位置编码，NTC最高温，NTC最低温，电压，电流，SOC。
 ## 模型结构方面
 包含一个lstm和attention，每隔50个数据点进行一次attention，并重新lstm。  
-在100 * 2个序列上进行训练，在600 * 2个序列上有稳定的表现。  
+在100 * 2个序列上进行训练，在650 * 2个序列上有稳定的表现。  
 预测的是最大值的均值和方差，使用高斯负对数似然进行误差评估。  
 效果不错！！
 
-# 预测100*2时序
-## 对1720组测试集各组数据求取其均值，最大值和最小值，可得，平均均值误差为0.2790K，平均最大值为0.6537K，平均最小值为0.0084K
-![100.png](best_version%2F100.png)
-# 预测600*2时序
-## 对120组测试集各组数据求取其均值，最大值和最小值，可得，平均均值误差为0.5457K，平均最大值为1.5094K，平均最小值为0.0011K
-![1200.png](best_version%2F1200.png)
-
-# 04 Seq2Seq_All模组内全电芯预测模型
+# 预测全时序
+## 对25组电芯求取其均值，最大值和最小值，可得，平均均值误差为0.3371K，平均最大值为0.6216K，平均最小值为0.0111K
+![0.png](best_version%2Fsingle%2F0.png)
+![1.png](best_version%2Fsingle%2F1.png)
+![2.png](best_version%2Fsingle%2F2.png)
+![3.png](best_version%2Fsingle%2F3.png)
+![4.png](best_version%2Fsingle%2F4.png)
+![5.png](best_version%2Fsingle%2F5.png)
+![6.png](best_version%2Fsingle%2F6.png)
+![7.png](best_version%2Fsingle%2F7.png)
+![8.png](best_version%2Fsingle%2F8.png)
+![9.png](best_version%2Fsingle%2F9.png)
+![10.png](best_version%2Fsingle%2F10.png)
+![11.png](best_version%2Fsingle%2F11.png)
+![12.png](best_version%2Fsingle%2F12.png)
+![13.png](best_version%2Fsingle%2F13.png)
+![14.png](best_version%2Fsingle%2F14.png)
+![15.png](best_version%2Fsingle%2F15.png)
+![16.png](best_version%2Fsingle%2F16.png)
+![17.png](best_version%2Fsingle%2F17.png)
+![18.png](best_version%2Fsingle%2F18.png)
+![19.png](best_version%2Fsingle%2F19.png)
+![20.png](best_version%2Fsingle%2F20.png)
+![21.png](best_version%2Fsingle%2F21.png)
+![22.png](best_version%2Fsingle%2F22.png)
+![23.png](best_version%2Fsingle%2F23.png)
+![24.png](best_version%2Fsingle%2F24.png)
+![25.png](best_version%2Fsingle%2F25.png)
