@@ -5,7 +5,7 @@ import librosa.util as librosa_util
 from torch.utils.data import Dataset, random_split, DataLoader
 
 from pythons.api.base.paras import paras_Prediction_Seq2Seq
-from pythons.api.base.paths import path_data_origin_pkl
+from pythons.api.base.paths import path_data_origin_pkl_single
 
 
 class Prediction_Seq2Seq_Dataset(Dataset):
@@ -47,8 +47,8 @@ class Prediction_Seq2Seq_Dataset(Dataset):
 
 
 # 加载数据集
-dataset_train_val = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[0], flag_slide=True)
-dataset_test = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[1], flag_slide=False)
+dataset_train_val = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl_single, paras=paras_Prediction_Seq2Seq, modules=[0], flag_slide=True)
+dataset_test = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl_single, paras=paras_Prediction_Seq2Seq, modules=[1], flag_slide=False)
 
 # 分割train, test, val，并进行数据加载
 train_set_size = int(len(dataset_train_val) * 0.8)

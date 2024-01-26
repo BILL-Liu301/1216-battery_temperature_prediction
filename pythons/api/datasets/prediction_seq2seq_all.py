@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, random_split, DataLoader
 
 from pythons.api.base import paras
 from pythons.api.base.paras import paras_Prediction_Seq2Seq_All
-from pythons.api.base.paths import path_data_origin_pkl
+from pythons.api.base.paths import path_data_origin_pkl_all
 
 
 class Prediction_Seq2Seq_All_Dataset(Dataset):
@@ -30,8 +30,6 @@ class Prediction_Seq2Seq_All_Dataset(Dataset):
                                             dataset_group['location'], dataset_group['NTC_max'], dataset_group['NTC_min'],
                                             dataset_group['Voltage'], dataset_group['Current'], dataset_group['SOC'],
                                             np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
-                data_group[:, 4] = data_group[:, 4] / 100
-                data_group[:, 5] = data_group[:, 5] * -1
                 if self.flag_slide:
                     data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
                     for slide in range(data_group_slide.shape[-1]):
@@ -48,8 +46,8 @@ class Prediction_Seq2Seq_All_Dataset(Dataset):
 
 
 # 加载数据集
-dataset_train_val = Prediction_Seq2Seq_All_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq_All, modules=[0])
-dataset_test = Prediction_Seq2Seq_All_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq_All, modules=[1])
+dataset_train_val = Prediction_Seq2Seq_All_Dataset(path_data=path_data_origin_pkl_all, paras=paras_Prediction_Seq2Seq_All, modules=[0])
+dataset_test = Prediction_Seq2Seq_All_Dataset(path_data=path_data_origin_pkl_all, paras=paras_Prediction_Seq2Seq_All, modules=[1])
 
 # 分割train, test, val，并进行数据加载
 train_set_size = int(len(dataset_train_val) * 0.8)

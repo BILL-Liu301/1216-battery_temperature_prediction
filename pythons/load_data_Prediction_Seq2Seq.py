@@ -2,7 +2,7 @@ import pickle
 import numpy as np
 import pandas as pd
 
-from api.base.paths import path_data_t9m, path_data_origin_pkl
+from api.base.paths import path_data_t9m, path_data_origin_pkl_single
 from api.base.ids import temperature_measure_points, temperature_location
 from api.base.paras import K, num_measure_point
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
         data_np_origin[:, 7:] = np.asarray(data_xlsx[temperature_measure_points[cell_name]])[0:duration.shape[0]] + K
         data_dict_origin.update({cell_name: data_np_origin.copy().transpose()})
     # 保存数据
-    with open(path_data_origin_pkl, 'wb') as pkl:
+    with open(path_data_origin_pkl_single, 'wb') as pkl:
         pickle.dump(data_dict_origin, pkl)
         pkl.close()
-    print(f"pkl文件已保存至【{path_data_origin_pkl}】")
+    print(f"pkl文件已保存至【{path_data_origin_pkl_single}】")

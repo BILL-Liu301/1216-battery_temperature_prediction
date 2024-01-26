@@ -3,9 +3,9 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-from api.base.paths import path_data_t9m_sim, path_data_origin_pkl
+from api.base.paths import path_data_t9m_sim, path_data_origin_pkl_all
 from api.base.ids import temperature_measure_points, temperature_location
-from api.base.paras import K, num_measure_point
+from api.base.paras import K
 
 
 def interpolation_duration_to_stamp(stamp, duration, x):
@@ -50,15 +50,15 @@ if __name__ == '__main__':
     # 数据中只有两个模组，每个模组内100个电芯，每四个电芯为1组，所以每个模组内25组
     for module in tqdm(range(2), desc='Module', leave=False, ncols=100, disable=False):
         # 提取基本的时间戳、电压、电流和soc
-        stamp, voltage, current, soc = (np.asarray(data_xlsx_state['时间']).reshape(-1, 1), np.asarray(data_xlsx_state['电压-总']).reshape(-1, 1),
-                                        np.asarray(data_xlsx_state['电流']).reshape(-1, 1), np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))
+        stamp, voltage, current, soc = (np.asarray(data_xlsx_state['时间']).reshape(-1, 1), np.asarray(data_xlsx_state['电压-总']).reshape(-1, 1) / 100,
+                                        np.asarray(data_xlsx_state['电流']).reshape(-1, 1) * -1, np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))
 
         # 提取所有组共享的时间、NTC最高温和NTC最低温，每个模组对应四个ntc
         num_NTC = 4
         duration = np.asarray(data_xlsx_temperature['物理时间 [s]']).reshape(-1, 1)
         NTC = np.zeros([duration.shape[0], num_NTC])
         for ntc in range(num_NTC):
-            NTC[:, ntc] = np.asarray(data_xlsx_ntc[f'PG 温度（固体） {ntc + module * num_NTC + 1}'])
+            NTC[:, ntc] = np.asarray(data_xlsx_ntc[f'PG 温度（固体） {ntc + module * num_NTC + 1}']) + K
         NTC = interpolation_duration_to_stamp(stamp, duration, NTC)
 
         dataset_base['stamp'], dataset_base['NTC_max'], dataset_base['NTC_min'], dataset_base['Voltage'], dataset_base['Current'], dataset_base['SOC'] \
@@ -80,15 +80,15 @@ if __name__ == '__main__':
         for group in tqdm(range(num_group), desc='Group', leave=False, ncols=100, disable=False):
             location = np.ones([stamp.shape[0], 1]) * (num_cell * group) / (num_cell * (num_group - 1))
             for cell in range(num_cell):
-                temperature_min[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最小值 温度（固体） {start_id[0] + direction * (cell + num_cell * group)}'])
-                temperature_max[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最大值 温度（固体） {start_id[1] + direction * (cell + num_cell * group)}'])
+                temperature_min[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最小值 温度（固体） {start_id[0] + direction * (cell + num_cell * group)}']) + K
+                temperature_max[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最大值 温度（固体） {start_id[1] + direction * (cell + num_cell * group)}']) + K
             dataset_base['location'] = location
             dataset_base['Temperature_min'] = interpolation_duration_to_stamp(stamp, duration, temperature_min)
             dataset_base['Temperature_max'] = interpolation_duration_to_stamp(stamp, duration, temperature_max)
 
             dataset[f'module-{module}'].append(dataset_base.copy())
 
-    with open(path_data_origin_pkl, 'wb') as pkl:
+    with open(path_data_origin_pkl_all, 'wb') as pkl:
         pickle.dump(dataset, pkl)
         pkl.close()
-    print(f"pkl文件已保存至【{path_data_origin_pkl}】")
+    print(f"pkl文件已保存至【{path_data_origin_pkl_all}】")
