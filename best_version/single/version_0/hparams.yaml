@@ -6,8 +6,8 @@ paras:
   num_layers: 4
   num_measure_point: 7
   scale: 100
-  seq_attention_once: 50
-  seq_history: 5
-  seq_predict: 100
+  seq_attention_once: 100
+  seq_history: 1
+  seq_predict: 200
   size_middle: 16
   split_length: 2
