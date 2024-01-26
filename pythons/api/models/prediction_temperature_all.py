@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import pytorch_lightning as pl
 
-from .prediction_temperature import Prediction_Seq2seq_Model
+from .prediction_temperature import Prediction_Temperature_Model
 
 
 class Prediction_Seq2seq_All_Model(nn.Module):
@@ -19,7 +19,7 @@ class Prediction_Seq2seq_All_Model(nn.Module):
 
 
 class Prediction_Seq2seq_All_LightningModule(pl.LightningModule):
-    def __init__(self, paras: dict, model_single: Prediction_Seq2seq_Model):
+    def __init__(self, paras: dict, model_single: Prediction_Temperature_Model):
         super(Prediction_Seq2seq_All_LightningModule, self).__init__()
         self.model_single = model_single.eval()
         self.model_all = Prediction_Seq2seq_All_Model(self.model_single)

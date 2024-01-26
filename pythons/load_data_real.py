@@ -36,7 +36,7 @@ if __name__ == '__main__':
         dataset_base['location'] = cell_location * np.ones(stamp.shape)
         dataset_base['NTC_max'] = np.asarray(data_xlsx['最高温-BMS-NTC'])[0:stamp.shape[0]].reshape(-1, 1) + K
         dataset_base['NTC_min'] = np.asarray(data_xlsx['最低温-BMS-NTC'])[0:stamp.shape[0]].reshape(-1, 1) + K
-        dataset_base['Voltage'] = np.asarray(data_xlsx['平均电压'])[0:stamp.shape[0]].reshape(-1, 1)
+        dataset_base['Voltage'] = np.asarray(data_xlsx['平均电压'])[0:stamp.shape[0]].reshape(-1, 1) * 100
         dataset_base['Current'] = np.asarray(data_xlsx['电流'])[0:stamp.shape[0]].reshape(-1, 1)
         dataset_base['SOC'] = np.asarray(data_xlsx['SOC'])[0:stamp.shape[0]].reshape(-1, 1)
         dataset_base['Temperature_max'] = np.max(np.asarray(data_xlsx[temperature_measure_points[cell_name]])[0:stamp.shape[0]] + K, axis=1, keepdims=True).reshape(-1, 1)

@@ -8,9 +8,9 @@ from scipy.stats import norm
 import pytorch_lightning as pl
 
 
-class Prediction_Seq2seq_Model(nn.Module):
+class Prediction_Temperature_Model(nn.Module):
     def __init__(self, paras: dict):
-        super(Prediction_Seq2seq_Model, self).__init__()
+        super(Prediction_Temperature_Model, self).__init__()
 
         # 基础参数
         self.tanh = nn.Tanh()
@@ -101,10 +101,11 @@ class Prediction_Seq2seq_Model(nn.Module):
         return oup_m_, oup_var, (h_his, c_his)
 
 
-class Prediction_Seq2seq_LightningModule(pl.LightningModule):
+class Prediction_Temperature_LightningModule(pl.LightningModule):
     def __init__(self, paras: dict):
-        super(Prediction_Seq2seq_LightningModule, self).__init__()
-        self.prediction_seq2seq = Prediction_Seq2seq_Model(paras)
+        super(Prediction_Temperature_LightningModule, self).__init__()
+        self.model = Prediction_Temperature_Model(paras)
+
         self.criterion_train = nn.GaussianNLLLoss(reduction='mean')
         self.criterion_val = nn.MSELoss(reduction='mean')
         self.criterion_test = nn.L1Loss(reduction='none')
@@ -124,13 +125,13 @@ class Prediction_Seq2seq_LightningModule(pl.LightningModule):
         }
 
     def forward(self, inp_info_his, inp_temperature_his, inp_info, h_his=None, c_his=None):
-        return self.prediction_seq2seq(inp_info_his, inp_temperature_his, inp_info)
+        return self.model(inp_info_his, inp_temperature_his, inp_info)
 
     def run_base(self, batch, batch_idx):
         inp_info_his = batch[:, 0:self.seq_history, 1:7]
         inp_temperature_his = batch[:, 0:self.seq_history, 7:8]
         inp_info = batch[:, self.seq_history:, 1:7]
-        pre_mean, pre_var, _ = self.prediction_seq2seq(inp_info_his, inp_temperature_his, inp_info)
+        pre_mean, pre_var, _ = self.model(inp_info_his, inp_temperature_his, inp_info)
         ref_mean = batch[:, self.seq_history:, 7:8]
         return pre_mean, pre_var, ref_mean
 
