@@ -16,6 +16,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # Prediction_Seq2Seq
 paras_Prediction_Seq2Seq = {
     'num_measure_point': num_measure_point,
+    'info_len': 6,
     'seq_history': 1,
     'seq_predict': 200,  # 100和600
     'seq_attention_once': 100,
@@ -30,7 +31,7 @@ paras_Prediction_Seq2Seq = {
 
 # Prediction_Seq2Seq_All
 paras_Prediction_Seq2Seq_All = {
-    'length_env_info': 6,
+    'info_len': 6,
     'seq_history': 5,
     'seq_predict': 650,
     'seq_attention_once': 50,

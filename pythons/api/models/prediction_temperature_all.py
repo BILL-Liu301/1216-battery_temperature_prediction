@@ -4,7 +4,7 @@ import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
 import pytorch_lightning as pl
 
-from .prediction_seq2seq import Prediction_Seq2seq_Model
+from .prediction_temperature import Prediction_Seq2seq_Model
 
 
 class Prediction_Seq2seq_All_Model(nn.Module):
