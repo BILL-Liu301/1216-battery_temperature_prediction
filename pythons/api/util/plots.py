@@ -10,8 +10,8 @@ def plot_for_prediction_seq2seq_val_test(_result, paras):
 
     # 结果展示
     ax = plt.subplot(6, 1, 1)
-    for j in range(paras['num_measure_point']):
-        plt.plot(xx, _result['origin'][1 + j], 'k-.')
+    # for j in range(paras['num_measure_point']):
+    #     plt.plot(xx, _result['origin'][1 + j], 'k-.')
 
     plt.plot(_result['ref'][0], _result['ref'][1], 'b-', label='ref_mean')
 
