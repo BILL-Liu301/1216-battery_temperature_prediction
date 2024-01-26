@@ -29,8 +29,6 @@ class Prediction_Seq2Seq_Dataset(Dataset):
                                              dataset_group['location'], dataset_group['NTC_max'], dataset_group['NTC_min'],
                                              dataset_group['Voltage'], dataset_group['Current'], dataset_group['SOC'],
                                              np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
-                data_group[:, 4] = data_group[:, 4] / 100
-                data_group[:, 5] = data_group[:, 5] * -1
                 if self.flag_slide:
                     data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
                     for slide in range(data_group_slide.shape[-1]):
@@ -47,8 +45,8 @@ class Prediction_Seq2Seq_Dataset(Dataset):
 
 
 # 加载数据集
-path_data_origin_pkl = path_data_origin_pkl_sim
-# path_data_origin_pkl = path_data_origin_pkl_real
+# path_data_origin_pkl = path_data_origin_pkl_sim
+path_data_origin_pkl = path_data_origin_pkl_real
 dataset_train_val = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[0], flag_slide=True)
 dataset_test = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[1], flag_slide=False)
 

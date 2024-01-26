@@ -51,7 +51,7 @@ if __name__ == '__main__':
     for module in tqdm(range(2), desc='Module', leave=False, ncols=100, disable=False):
         # 提取基本的时间戳、电压、电流和soc
         stamp, voltage, current, soc = (np.asarray(data_xlsx_state['时间']).reshape(-1, 1), np.asarray(data_xlsx_state['电压-总']).reshape(-1, 1) / 100,
-                                        np.asarray(data_xlsx_state['电流']).reshape(-1, 1) * -1, np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))
+                                        np.asarray(data_xlsx_state['电流']).reshape(-1, 1), np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))
 
         # 提取所有组共享的时间、NTC最高温和NTC最低温，每个模组对应四个ntc
         num_NTC = 4

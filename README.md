@@ -25,11 +25,16 @@ Pre_Encoder用于对前半部分的温度分布进行预测，目前是预测七
 先计算初始温度的均值、方差和分布，然后通过Cross_Attention预测均值与方差随时间的变化，以及分布随时间的变化，最后进行反算。
 
 # 03 & 04 
-# 单模型预测单电芯
+# 多模型预测单电芯
 ## 数据处理方面
 load_data之后，不做任何处理，在各自的dataloader内进行处理。  
 在dataloader内，用滑动窗口的方式提取数据，并每隔1个点提取一个数据点。模型输入数据包含六个变量，分别是位置编码，NTC最高温，NTC最低温，电压，电流，SOC。
 ## 模型结构方面
+首先，模型1根据电流策略对SOC、电压、NTC最高温和NTC最低温进行预测  
+其次，模型2基于预测出的数据进行温度预测  
+### 模型1
+
+### 模型2
 包含一个lstm和attention，每隔50个数据点进行一次attention，并重新lstm。  
 在100 * 2个序列上进行训练，在650 * 2个序列上有稳定的表现。  
 预测的是最大值的均值和方差，使用高斯负对数似然进行误差评估。  
@@ -37,7 +42,7 @@ load_data之后，不做任何处理，在各自的dataloader内进行处理。
 
 # 预测全时序
 # 在仿真数据中
-## 对25组电芯求取其均值，最大值和最小值，可得，平均均值误差为0.4051K，平均最大值为0.8167K，平均最小值为0.0032K
+## 对25组电芯求取其均值，最大值和最小值，可得，平均均值误差为0.3204K，平均最大值为0.7734K，平均最小值为0.0010K
 ![0.png](best_version%2Fsingle%2Fsim%2F0.png)
 ![1.png](best_version%2Fsingle%2Fsim%2F1.png)
 ![2.png](best_version%2Fsingle%2Fsim%2F2.png)
@@ -64,6 +69,7 @@ load_data之后，不做任何处理，在各自的dataloader内进行处理。
 ![23.png](best_version%2Fsingle%2Fsim%2F23.png)
 ![24.png](best_version%2Fsingle%2Fsim%2F24.png)
 # 实际数据中
+## 对4组电芯求取其均值，最大值和最小值，可得，平均均值误差为1.0222K，平均最大值为2.4153K，平均最小值为0.0058K
 ![0.png](best_version%2Fsingle%2Freal%2F0.png)
 ![1.png](best_version%2Fsingle%2Freal%2F1.png)
 ![2.png](best_version%2Fsingle%2Freal%2F2.png)

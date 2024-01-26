@@ -26,9 +26,9 @@ class Prediction_Seq2seq_Model(nn.Module):
         self.num_layers = paras['num_layers']
         self.device = paras['device']
         self.scale = paras['scale']
+        self.info_len = paras['info_len']
         self.delta_limit_m_ = 20
         self.delta_limit_var = 5
-        self.info_len = 6
 
         # 对未来时序进行预测，pre
         # 分为两部分：

@@ -8,8 +8,8 @@ from tqdm import tqdm
 from lightning_fabric.utilities.warnings import PossibleUserWarning
 
 from api.base.paras import paras_Prediction_Seq2Seq
-from api.datasets.prediction_seq2seq import paras_Prediction_Seq2Seq_dataset
-from api.models.prediction_seq2seq import Prediction_Seq2seq_LightningModule
+from api.datasets.prediction_temperature import paras_Prediction_Seq2Seq_dataset
+from api.models.prediction_temperature import Prediction_Seq2seq_LightningModule
 from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test
 from pythons.api.util.plots import plot_for_prediction_seq2seq_val_test
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
 
     # 找到ckpt
-    path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
-    # path_version = path_ckpt_best_version + 'single/version_0/checkpoints/'
+    # path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
+    path_version = path_ckpt_best_version + 'single/predict_temperature/checkpoints/'
     ckpt = path_version + os.listdir(path_version)[0]
 
     # 设置训练器
