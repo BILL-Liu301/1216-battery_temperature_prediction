@@ -42,7 +42,7 @@ load_data之后，不做任何处理，在各自的dataloader内进行处理。
 
 # 预测全时序
 # 在仿真数据中
-## 对25组电芯求取其均值，最大值和最小值，可得，平均均值误差为0.3204K，平均最大值为0.7734K，平均最小值为0.0010K
+## 对25组电芯求取其均值，最大值和最小值，可得，平均均值误差为0.3115K，平均最大值为0.6807K，平均最小值为0.0012K
 ![0.png](best_version%2Fsingle%2Fsim%2F0.png)
 ![1.png](best_version%2Fsingle%2Fsim%2F1.png)
 ![2.png](best_version%2Fsingle%2Fsim%2F2.png)
@@ -69,7 +69,7 @@ load_data之后，不做任何处理，在各自的dataloader内进行处理。
 ![23.png](best_version%2Fsingle%2Fsim%2F23.png)
 ![24.png](best_version%2Fsingle%2Fsim%2F24.png)
 # 实际数据中
-## 对4组电芯求取其均值，最大值和最小值，可得，平均均值误差为1.0222K，平均最大值为2.4153K，平均最小值为0.0058K
+## 对4组电芯求取其均值，最大值和最小值，可得，平均均值误差为1.0805K，平均最大值为2.4539K，平均最小值为0.0105K
 ![0.png](best_version%2Fsingle%2Freal%2F0.png)
 ![1.png](best_version%2Fsingle%2Freal%2F1.png)
 ![2.png](best_version%2Fsingle%2Freal%2F2.png)

@@ -35,25 +35,22 @@ class Prediction_State_Model(nn.Module):
         # 分为两部分：
         #       m_：均值/最大值/最小值
         #       var：方差
-        self.pre_linear_layer_info = nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
+        self.pre_linear_layer_info = nn.Sequential(nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias),
                                                    nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_norm_info = nn.LayerNorm(normalized_shape=self.info_len, elementwise_affine=False)
-        self.pre_attention_q = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_attention_k = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
-        self.pre_attention_v = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias),
-                                             nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.size_middle, bias=self.bias))
+        self.pre_attention_q = nn.Sequential(nn.LayerNorm(normalized_shape=self.state_len + self.info_len, elementwise_affine=False),
+                                             nn.Tanh(), nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias))
+        self.pre_attention_k = nn.Sequential(nn.LayerNorm(normalized_shape=self.state_len + self.info_len, elementwise_affine=False),
+                                             nn.Tanh(), nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias))
+        self.pre_attention_v = nn.Sequential(nn.LayerNorm(normalized_shape=self.state_len + self.info_len, elementwise_affine=False),
+                                             nn.Tanh(), nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias))
         self.h0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
         self.c0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
         self.pre_lstm_m_var = nn.LSTM(input_size=self.size_middle, hidden_size=self.size_middle, num_layers=self.num_layers, bidirectional=self.lstm_bidirectional,
                                       bias=self.bias, batch_first=True)
         self.pre_norm_m_var = nn.LayerNorm(normalized_shape=self.D * self.size_middle, elementwise_affine=False)
-        self.pre_linear_layer_decoder_m_ = nn.Sequential(nn.ReLU(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
-                                                         nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.state_len, bias=self.bias),
+        self.pre_linear_layer_decoder_m_ = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
                                                          nn.Tanh())
-        self.pre_linear_layer_decoder_var = nn.Sequential(nn.ReLU(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.size_middle, bias=self.bias),
-                                                          nn.ReLU(), nn.Linear(in_features=self.size_middle, out_features=self.state_len, bias=self.bias),
+        self.pre_linear_layer_decoder_var = nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
                                                           nn.Sigmoid())
 
     def self_attention(self, qkv):
@@ -83,18 +80,22 @@ class Prediction_State_Model(nn.Module):
         state_ref = inp_state_his[:, -1:]
         # 分段预测
         for seq in range(seqs):
-            # 编码和归一化
-            linear_layer_info = self.pre_linear_layer_info(inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once])
-            norm_info = self.pre_norm_info(inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once])
+            # 拼接
+            info_temp = inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
+            info_temp = torch.cat([state_ref.repeat(1, info_temp.shape[1], 1), info_temp], dim=-1)
+            # 编码
+            linear_layer_info = self.pre_linear_layer_info(info_temp)
             # attention
-            attention_q, attention_k, attention_v = self.pre_attention_q(norm_info), self.pre_attention_k(norm_info), self.pre_attention_v(norm_info)
+            attention_q, attention_k, attention_v = self.pre_attention_q(info_temp), self.pre_attention_k(info_temp), self.pre_attention_v(info_temp)
             attentioned = self.self_attention([attention_q, attention_k, attention_v]) + linear_layer_info
             # lstm
             lstmed, _ = self.pre_lstm_m_var(attentioned, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
             encoded = self.pre_norm_m_var(lstmed)
             # 解码
-            oup_m_.append(self.pre_linear_layer_decoder_m_(encoded) * self.delta_limit_m_ + state_ref)
-            oup_var.append(self.pre_linear_layer_decoder_var(encoded) * self.delta_limit_var)
+            m_ = self.pre_linear_layer_decoder_m_(encoded)
+            var = self.pre_linear_layer_decoder_var(encoded)
+            oup_m_.append(m_ * self.delta_limit_m_ + state_ref)
+            oup_var.append(var * self.delta_limit_var + 0.3 * torch.sign(var))
             state_ref = oup_m_[-1][:, -1:]
         oup_m_ = torch.cat(oup_m_, dim=1)
         oup_var = torch.cat(oup_var, dim=1)

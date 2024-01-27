@@ -1,6 +1,7 @@
 paras:
   device: !!python/object/apply:torch.device
   - cuda
+  info_len: 6
   lr_init: 0.001
   max_epochs: 100
   num_layers: 4

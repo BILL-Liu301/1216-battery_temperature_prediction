@@ -1,0 +1,58 @@
+paras:
+  current_to_soc: 2561.927693277231
+  delta_limit_m_: !!python/object/apply:numpy.core.multiarray._reconstruct
+    args:
+    - &id001 !!python/name:numpy.ndarray ''
+    - !!python/tuple
+      - 0
+    - !!binary |
+      Yg==
+    state: !!python/tuple
+    - 1
+    - !!python/tuple
+      - 3
+    - &id002 !!python/object/apply:numpy.dtype
+      args:
+      - f8
+      - false
+      - true
+      state: !!python/tuple
+      - 3
+      - <
+      - null
+      - null
+      - null
+      - -1
+      - -1
+      - 0
+    - false
+    - !!binary |
+      AAAAAAAAWUAAAAAAAABZQAAAAAAAAFlA
+  delta_limit_var: !!python/object/apply:numpy.core.multiarray._reconstruct
+    args:
+    - *id001
+    - !!python/tuple
+      - 0
+    - !!binary |
+      Yg==
+    state: !!python/tuple
+    - 1
+    - !!python/tuple
+      - 3
+    - *id002
+    - false
+    - !!binary |
+      AAAAAAAAJEAAAAAAAAAkQAAAAAAAACRA
+  device: !!python/object/apply:torch.device
+  - cuda
+  info_len: 2
+  lr_init: 0.001
+  max_epochs: 100
+  num_layers: 2
+  scale: 100
+  seq_attention_once: 100
+  seq_history: 1
+  seq_predict: 200
+  size_middle: 16
+  split_length: 2
+  state_len: 3
