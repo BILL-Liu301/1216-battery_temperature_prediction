@@ -35,7 +35,9 @@ class Prediction_All_Dataset(Dataset):
                 stamp = dataset_group['stamp']
                 current = dataset_group['Current']
                 soc = self.integral_i(stamp, current, dataset_group['SOC'][0, 0])
-                data_group = np.concatenate([stamp, current, soc, np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
+                data_group = np.concatenate([dataset_group['stamp'], dataset_group['SOC'], dataset_group['location'], current, soc,
+                                             dataset_group['Voltage'], dataset_group['NTC_max'], dataset_group['NTC_min'],
+                                             np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
                 if self.flag_slide:
                     data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
                     for slide in range(data_group_slide.shape[-1]):

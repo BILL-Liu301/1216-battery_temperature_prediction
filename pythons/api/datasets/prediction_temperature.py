@@ -25,9 +25,8 @@ class Prediction_Temperature_Dataset(Dataset):
         for module in modules:
             dataset_module = dataset[f'module-{module}']
             for dataset_group in dataset_module:
-                data_group = np.concatenate([dataset_group['stamp'],
-                                             dataset_group['location'], dataset_group['NTC_max'], dataset_group['NTC_min'],
-                                             dataset_group['Voltage'], dataset_group['Current'], dataset_group['SOC'],
+                data_group = np.concatenate([dataset_group['stamp'], dataset_group['location'], dataset_group['Current'], dataset_group['SOC'],
+                                             dataset_group['Voltage'], dataset_group['NTC_max'], dataset_group['NTC_min'],
                                              np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
                 if self.flag_slide:
                     data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)

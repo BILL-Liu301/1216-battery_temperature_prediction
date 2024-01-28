@@ -64,8 +64,8 @@ train_set_size = int(len(dataset_train_val) * 0.8)
 valid_set_size = len(dataset_train_val) - train_set_size
 dataset_train, dataset_val = random_split(dataset_train_val, [train_set_size, valid_set_size])
 
-dataset_loader_train = DataLoader(dataset_train, batch_size=128, shuffle=True, pin_memory=True, num_workers=0)
-dataset_loader_val = DataLoader(dataset_val, batch_size=128, pin_memory=True, num_workers=0)
+dataset_loader_train = DataLoader(dataset_train, batch_size=8, shuffle=True, pin_memory=True, num_workers=0)
+dataset_loader_val = DataLoader(dataset_val, batch_size=8, pin_memory=True, num_workers=0)
 dataset_loader_test = DataLoader(dataset_test, batch_size=5, pin_memory=True, num_workers=0)
 paras_Prediction_State_dataset = {
     'dataset_loader_train': dataset_loader_train,

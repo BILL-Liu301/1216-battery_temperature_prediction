@@ -15,7 +15,7 @@ from pythons.api.util.plots import plot_for_prediction_state_val_test
 
 if __name__ == '__main__':
     pl.seed_everything(2024)
-    plt.figure(figsize=(20, 11.25))
+    fig = plt.figure(figsize=(20, 11.25))
 
     # 为了好看，屏蔽warning，没事别解注释这个
     warnings.filterwarnings('ignore', category=PossibleUserWarning)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     # 设置训练器
     trainer = pl.Trainer(default_root_dir=path_ckpts, accelerator='gpu', devices=1)
-    model = Prediction_State_LightningModule.load_from_checkpoint(checkpoint_path=ckpt, paras=paras_Prediction_State)
+    model = Prediction_State_LightningModule.load_from_checkpoint(checkpoint_path=ckpt)
     dataloaders = paras_Prediction_State_dataset['dataset_loader_test']
     trainer.test(model=model, dataloaders=dataloaders)
 
@@ -40,10 +40,10 @@ if __name__ == '__main__':
         test_loss = model.test_losses[state]
         loss_mean, loss_max, loss_min = torch.cat(test_loss['mean'], dim=0), torch.cat(test_loss['max'], dim=0), torch.cat(test_loss['min'], dim=0)
         print(f'{state}:')
-        print(f'\t平均均值误差：{loss_mean.mean()}K')
-        print(f'\t平均最大误差：{loss_max.mean()}K')
-        print(f'\t平均最小误差：{loss_min.mean()}K')
+        print(f'\t平均均值误差：{loss_mean.mean()}(V?℃)')
+        print(f'\t平均最大误差：{loss_max.mean()}(V?℃)')
+        print(f'\t平均最小误差：{loss_min.mean()}(V?℃)')
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_results = model.test_results[i]
-        plot_for_prediction_state_val_test(test_results, paras_Prediction_State)
+        plot_for_prediction_state_val_test(fig, i, test_results, paras_Prediction_State)
         plt.savefig(path_figs_test + f'{i}.png')

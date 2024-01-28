@@ -8,9 +8,9 @@ from scipy.stats import norm
 import pytorch_lightning as pl
 
 
-class Prediction_Temperature_Model(nn.Module):
+class Prediction_Temperature_Module(nn.Module):
     def __init__(self, paras: dict):
-        super(Prediction_Temperature_Model, self).__init__()
+        super(Prediction_Temperature_Module, self).__init__()
 
         # 基础参数
         self.tanh = nn.Tanh()
@@ -79,7 +79,7 @@ class Prediction_Temperature_Model(nn.Module):
 
         seqs = (seq_predict // self.seq_attention_once) if (seq_predict % self.seq_attention_once == 0) else (seq_predict // self.seq_attention_once + 1)
         oup_m_, oup_var = list(), list()
-        temperature_ref = inp_temperature_his[:, -1:]
+        temperature_ref = inp_temperature_his.clone()
         # 分段预测
         for seq in range(seqs):
             # 编码和归一化
@@ -104,7 +104,7 @@ class Prediction_Temperature_Model(nn.Module):
 class Prediction_Temperature_LightningModule(pl.LightningModule):
     def __init__(self, paras: dict):
         super(Prediction_Temperature_LightningModule, self).__init__()
-        self.model = Prediction_Temperature_Model(paras)
+        self.model_temperature = Prediction_Temperature_Module(paras)
 
         self.criterion_train = nn.GaussianNLLLoss(reduction='mean')
         self.criterion_val = nn.MSELoss(reduction='mean')
@@ -125,13 +125,13 @@ class Prediction_Temperature_LightningModule(pl.LightningModule):
         }
 
     def forward(self, inp_info_his, inp_temperature_his, inp_info, h_his=None, c_his=None):
-        return self.model(inp_info_his, inp_temperature_his, inp_info)
+        return self.model_temperature(inp_info_his, inp_temperature_his, inp_info, h_his=h_his, c_his=c_his)
 
     def run_base(self, batch, batch_idx):
         inp_info_his = batch[:, 0:self.seq_history, 1:7]
         inp_temperature_his = batch[:, 0:self.seq_history, 7:8]
         inp_info = batch[:, self.seq_history:, 1:7]
-        pre_mean, pre_var, _ = self.model(inp_info_his, inp_temperature_his, inp_info)
+        pre_mean, pre_var, _ = self.model_temperature(inp_info_his, inp_temperature_his, inp_info)
         ref_mean = batch[:, self.seq_history:, 7:8]
         return pre_mean, pre_var, ref_mean
 

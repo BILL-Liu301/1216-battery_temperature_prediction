@@ -59,4 +59,5 @@ paras_Prediction_All = {
     'seq_predict': 200,
     'seq_attention_once': 100,
     'split_length': 2,  # 取点间隔，间隔为n个数时，split_length=n+1
+    'device': device
 }
