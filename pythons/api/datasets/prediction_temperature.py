@@ -4,11 +4,11 @@ import numpy as np
 import librosa.util as librosa_util
 from torch.utils.data import Dataset, random_split, DataLoader
 
-from pythons.api.base.paras import paras_Prediction_Seq2Seq
+from pythons.api.base.paras import paras_Prediction_Temperature
 from pythons.api.base.paths import path_data_origin_pkl_real, path_data_origin_pkl_sim
 
 
-class Prediction_Seq2Seq_Dataset(Dataset):
+class Prediction_Temperature_Dataset(Dataset):
     def __init__(self, path_data, paras, modules=None, flag_slide=True):
         self.hop_length = 1  # 滑窗间隔
         self.flag_slide = flag_slide
@@ -25,9 +25,8 @@ class Prediction_Seq2Seq_Dataset(Dataset):
         for module in modules:
             dataset_module = dataset[f'module-{module}']
             for dataset_group in dataset_module:
-                data_group = np.concatenate([dataset_group['stamp'],
-                                             dataset_group['location'], dataset_group['NTC_max'], dataset_group['NTC_min'],
-                                             dataset_group['Voltage'], dataset_group['Current'], dataset_group['SOC'],
+                data_group = np.concatenate([dataset_group['stamp'], dataset_group['location'], dataset_group['Current'], dataset_group['SOC'],
+                                             dataset_group['Voltage'], dataset_group['NTC_max'], dataset_group['NTC_min'],
                                              np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
                 if self.flag_slide:
                     data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
@@ -45,10 +44,10 @@ class Prediction_Seq2Seq_Dataset(Dataset):
 
 
 # 加载数据集
-# path_data_origin_pkl = path_data_origin_pkl_sim
-path_data_origin_pkl = path_data_origin_pkl_real
-dataset_train_val = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[0], flag_slide=True)
-dataset_test = Prediction_Seq2Seq_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Seq2Seq, modules=[1], flag_slide=False)
+path_data_origin_pkl = path_data_origin_pkl_sim
+# path_data_origin_pkl = path_data_origin_pkl_real
+dataset_train_val = Prediction_Temperature_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Temperature, modules=[0], flag_slide=True)
+dataset_test = Prediction_Temperature_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Temperature, modules=[1], flag_slide=False)
 
 # 分割train, test, val，并进行数据加载
 train_set_size = int(len(dataset_train_val) * 0.8)
@@ -58,7 +57,7 @@ dataset_train, dataset_val = random_split(dataset_train_val, [train_set_size, va
 dataset_loader_train = DataLoader(dataset_train, batch_size=16, shuffle=True, pin_memory=True, num_workers=0)
 dataset_loader_val = DataLoader(dataset_val, batch_size=16, pin_memory=True, num_workers=0)
 dataset_loader_test = DataLoader(dataset_test, batch_size=5, pin_memory=True, num_workers=0)
-paras_Prediction_Seq2Seq_dataset = {
+paras_Prediction_Temperature_dataset = {
     'dataset_loader_train': dataset_loader_train,
     'dataset_loader_val': dataset_loader_val,
     'dataset_loader_test': dataset_loader_test
