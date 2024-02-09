@@ -1,17 +1,18 @@
 import pickle
+import os
 import numpy as np
 import pandas as pd
+import time
 from tqdm import tqdm
 
 from api.base.paths import path_data_t9m_sim, path_data_origin_pkl_sim
-from api.base.ids import temperature_measure_points, temperature_location
 from api.base.paras import K
 
 
-def interpolation_duration_to_stamp(stamp, duration, x):
+def interpolation_duration_to_stamp(stamp, duration, x, desc=''):
     y = np.zeros([stamp.shape[0], x.shape[1]])
     # 通过时间相距最近的20个点进行拟合
-    for t in range(y.shape[0]):
+    for t in tqdm(range(y.shape[0]), desc=f'插值 {desc} ', leave=False, ncols=100, disable=False):
         ids = np.abs(stamp[t, 0] - duration[:, 0]).argsort(axis=0)
         ids = np.sort(ids[0:20], axis=0)
         fun_x = duration[ids, 0]
@@ -23,72 +24,96 @@ def interpolation_duration_to_stamp(stamp, duration, x):
 
 
 if __name__ == '__main__':
-    # 从xlsx中提取数据
-    print(f'从【{path_data_t9m_sim}】提取数据，正在提取...')
-    data_xlsx_state = pd.read_excel(path_data_t9m_sim, sheet_name='常温充-电流电压SOC')
-    data_xlsx_ntc = pd.read_excel(path_data_t9m_sim, sheet_name='常温充-NTC')
-    data_xlsx_temperature = pd.read_excel(path_data_t9m_sim, sheet_name='常温充-电芯大面最高、低温')
-
     # 基础存储单元
-    # 时间[s]，位置，NTC最高温，NTC最低温，电压-总体，电流，SOC，最高温，最低温
+    # 时间[s]，位置，NTC，电压-总体，电流，SOC，最高温，最低温
     dataset_base = {
         'stamp': None,
         'location': None,
-        'NTC_max': None,
-        'NTC_min': None,
+        'NTC': None,
         'Voltage': None,
         'Current': None,
         'SOC': None,
         'Temperature_max': None,
         'Temperature_min': None
     }
-    dataset = {
-        'module-0': list(),
-        'module-1': list()
-    }
+    dataset = dict()
 
-    # 数据中只有两个模组，每个模组内100个电芯，每四个电芯为1组，所以每个模组内25组
-    for module in tqdm(range(2), desc='Module', leave=False, ncols=100, disable=False):
-        # 提取基本的时间戳、电压、电流和soc
-        stamp, voltage, current, soc = (np.asarray(data_xlsx_state['时间']).reshape(-1, 1), np.asarray(data_xlsx_state['电压-单体']).reshape(-1, 1),
-                                        np.asarray(data_xlsx_state['电流']).reshape(-1, 1), np.asarray(data_xlsx_state['SOC']).reshape(-1, 1))
+    # 从data文件夹中提取数据文件
+    battery_files = os.listdir(path_data_t9m_sim)
+    print(f'从【{path_data_t9m_sim}】提取数据，'
+          f'\n其包含：')
+    for battery_file in battery_files:
+        print(f'[{battery_file}, {os.path.getsize(path_data_t9m_sim + battery_file) / 1024} KB]')
 
-        # 提取所有组共享的时间、NTC最高温和NTC最低温，每个模组对应四个ntc
-        num_NTC = 4
-        duration = np.asarray(data_xlsx_temperature['物理时间 [s]']).reshape(-1, 1)
-        NTC = np.zeros([duration.shape[0], num_NTC])
-        for ntc in range(num_NTC):
-            NTC[:, ntc] = np.asarray(data_xlsx_ntc[f'PG 温度（固体） {ntc + module * num_NTC + 1}']) + K
-        NTC = interpolation_duration_to_stamp(stamp, duration, NTC)
+    # 遍历工况
+    tbar_file = tqdm(battery_files, leave=False, ncols=100, disable=False)
+    for battery_file in tbar_file:
+        path_battery_file = path_data_t9m_sim + battery_file
 
-        dataset_base['stamp'], dataset_base['NTC_max'], dataset_base['NTC_min'], dataset_base['Voltage'], dataset_base['Current'], dataset_base['SOC'] \
-            = stamp, np.max(NTC, axis=1, keepdims=True), np.min(NTC, axis=1, keepdims=True), voltage, current, soc
+        # 在dataset中加载工况
+        charging_condition = battery_file.split('_')[1]
+        dataset.update({charging_condition: dict()})
+        tbar_file.set_description(charging_condition)
 
-        # 提取每组电芯的温度，start_id = [最低温起始id, 最高温起始id]
-        num_cell = 4
-        num_group = round(100 / num_cell)
-        temperature_max, temperature_min = np.zeros([duration.shape[0], num_cell]), np.zeros([duration.shape[0], num_cell])
-        if module == 0:
-            start_id = [209, 9]
-            direction = 1
-        elif module == 1:
-            start_id = [408, 208]
-            direction = -1
-        else:
-            start_id = [0, 0]
-            direction = 0
-        for group in tqdm(range(num_group), desc='Group', leave=False, ncols=100, disable=False):
-            location = np.ones([stamp.shape[0], 1]) * (num_cell * group) / (num_cell * (num_group - 1))
-            for cell in range(num_cell):
-                temperature_min[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最小值 温度（固体） {start_id[0] + direction * (cell + num_cell * group)}']) + K
-                temperature_max[:, cell] = np.asarray(data_xlsx_temperature[f'SG 最大值 温度（固体） {start_id[1] + direction * (cell + num_cell * group)}']) + K
-            dataset_base['location'] = location
-            dataset_base['Temperature_min'] = interpolation_duration_to_stamp(stamp, duration, temperature_min)
-            dataset_base['Temperature_max'] = interpolation_duration_to_stamp(stamp, duration, temperature_max)
+        # 从工况内提取数据
+        data_xlsx_state = pd.read_excel(path_battery_file, sheet_name='电压电流SOC')
+        data_xlsx_ntc = pd.read_excel(path_battery_file, sheet_name='NTC')
+        data_xlsx_temperature_max = pd.read_excel(path_battery_file, sheet_name='电芯大面最高温')
+        data_xlsx_temperature_min = pd.read_excel(path_battery_file, sheet_name='电芯大面最低温')
 
-            dataset[f'module-{module}'].append(dataset_base.copy())
+        # 遍历模组
+        num_module, num_cell_in_group, num_group = 2, 4, 25  # 100个电芯，4个电芯为一组，总共25组
+        tbar_module = tqdm(range(num_module), leave=False, ncols=100, disable=False)
+        for module in tbar_module:
+            # 在工况中加载模组
+            dataset[charging_condition].update({f'module-{module}': dict()})
+            tbar_module.set_description(f'模组 {module} ')
 
+            # 提取基础数据
+            stamp = np.asarray(data_xlsx_state['时间']).reshape(-1, 1)
+            duration = np.asarray(data_xlsx_ntc['物理时间 [s]']).reshape(-1, 1)
+            current = np.asarray(data_xlsx_state['电流']).reshape(-1, 1)
+            voltage = np.asarray(data_xlsx_state['电压']).reshape(-1, 1)
+            soc = np.asarray(data_xlsx_state['SOC']).reshape(-1, 1)
+            if module == 0:
+                ntc = np.asarray(data_xlsx_ntc[data_xlsx_ntc.columns[1::3][0:4]])
+            else:
+                ntc = np.asarray(data_xlsx_ntc[data_xlsx_ntc.columns[1::3][4:]])
+            ntc = interpolation_duration_to_stamp(stamp, duration, ntc, desc='ntc')
+
+            # 遍历电芯组
+            if module == 0:
+                tbar_group = tqdm(range(0, num_group, 1), desc='Group', leave=False, ncols=100, disable=False)
+            else:
+                tbar_group = tqdm(range(num_group - 1, -1, -1), desc='Group', leave=False, ncols=100, disable=False)
+            for group in tbar_group:
+                location = np.ones([stamp.shape[0], 1]) * group / (num_group - 1)
+                cell_start, cell_end = group * num_cell_in_group + module * 100, (group + 1) * num_cell_in_group - 1 + module * 100
+                tbar_group.set_description(f'电芯组 {cell_start}~{cell_end} ')
+
+                # 分组提取数据
+                temperature_max_origin = np.asarray(data_xlsx_temperature_max[data_xlsx_temperature_max.columns[1::3][cell_start:(cell_end + 1)]])
+                temperature_min_origin = np.asarray(data_xlsx_temperature_min[data_xlsx_temperature_min.columns[1::3][cell_start:(cell_end + 1)]])
+
+                # 根据时间戳进行转换
+                temperature_max = interpolation_duration_to_stamp(stamp, duration, temperature_max_origin, desc='temperature_max')
+                temperature_min = interpolation_duration_to_stamp(stamp, duration, temperature_min_origin, desc='temperature_min')
+
+                # 赋值给dataset_base
+                dataset_base['stamp'] = stamp.copy()
+                dataset_base['location'] = location.copy()
+                dataset_base['NTC'] = ntc.copy() + K
+                dataset_base['Voltage'] = voltage.copy()
+                dataset_base['Current'] = current.copy()
+                dataset_base['SOC'] = soc.copy()
+                dataset_base['Temperature_max'] = temperature_max + K
+                dataset_base['Temperature_min'] = temperature_min + K
+
+                # 赋值给dataset中对应的charging_condition
+                dataset[charging_condition][f'module-{module}'].update({f'{cell_start}~{cell_end}': dataset_base.copy()})
+
+        break
     with open(path_data_origin_pkl_sim, 'wb') as pkl:
         pickle.dump(dataset, pkl)
         pkl.close()
-    print(f"pkl文件已保存至【{path_data_origin_pkl_sim}】")
+    print(f"pkl文件已保存至【{path_data_origin_pkl_sim}】，{os.path.getsize(path_data_origin_pkl_sim) / 1024} KB。")
