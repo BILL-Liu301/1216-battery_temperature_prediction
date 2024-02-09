@@ -29,21 +29,31 @@ class Prediction_State_Dataset(Dataset):
             dataset = pickle.load(pkl)
             pkl.close()
         data = list()
-        for module in modules:
-            dataset_module = dataset[f'module-{module}']
-            for dataset_group in dataset_module:
-                stamp = dataset_group['stamp']
-                current = dataset_group['Current']
-                soc = self.integral_i(stamp, current, dataset_group['SOC'][0, 0])
-                data_group = np.concatenate([stamp, current, soc,
-                                             dataset_group['Voltage'], dataset_group['NTC_max'], dataset_group['NTC_min']], axis=1)
-                if self.flag_slide:
-                    data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
-                    for slide in range(data_group_slide.shape[-1]):
-                        data.append(torch.from_numpy(data_group_slide[:, 0:-1:self.split_length, slide].transpose().copy()).to(torch.float32))
-                else:
-                    data.append(torch.from_numpy(data_group[0:-1:self.split_length, :].copy()).to(torch.float32))
-                break
+
+        # 按工况遍历
+        for condition, dataset_condition in dataset.items():
+            # 按模组遍历
+            for module, dataset_module in dataset_condition.items():
+                if int(module.split('-')[1]) in modules:
+                    # 遍历电芯组，由于每个组的state都是一样的，所以只提取一次即可break
+                    for group, dataset_group in dataset_module.items():
+                        stamp = dataset_group['stamp']
+                        current = dataset_group['Current']
+                        soc = self.integral_i(stamp, current, dataset_group['SOC'][0, 0])
+                        condition = np.ones(soc.shape) * dataset_group['NTC'].mean(axis=1)[0]
+                        voltage = dataset_group['Voltage']
+                        ntc = dataset_group['NTC']
+                        data_origin = np.concatenate([stamp, current, soc, condition,
+                                                      voltage, ntc.max(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True)],
+                                                     axis=1)
+                        # 数据分割与否
+                        if self.flag_slide:
+                            data_slide = librosa_util.frame(x=data_origin.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
+                            for slide in range(data_slide.shape[-1]):
+                                data.append(torch.from_numpy(data_slide[:, 0:-1:self.split_length, slide].transpose().copy()).to(torch.float32))
+                        else:
+                            data.append(torch.from_numpy(data_origin[0:-1:self.split_length, :].copy()).to(torch.float32))
+                        break
         return data
 
     def __len__(self):
@@ -56,14 +66,11 @@ class Prediction_State_Dataset(Dataset):
 # 加载数据集
 path_data_origin_pkl = path_data_origin_pkl_sim
 # path_data_origin_pkl = path_data_origin_pkl_real
-dataset_train_val = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=True)
+dataset_train = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=True)
+dataset_val = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=False)
 dataset_test = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[1], flag_slide=False)
 
 # 分割train, test, val，并进行数据加载
-train_set_size = int(len(dataset_train_val) * 0.8)
-valid_set_size = len(dataset_train_val) - train_set_size
-dataset_train, dataset_val = random_split(dataset_train_val, [train_set_size, valid_set_size])
-
 dataset_loader_train = DataLoader(dataset_train, batch_size=8, shuffle=True, pin_memory=True, num_workers=0)
 dataset_loader_val = DataLoader(dataset_val, batch_size=8, pin_memory=True, num_workers=0)
 dataset_loader_test = DataLoader(dataset_test, batch_size=5, pin_memory=True, num_workers=0)

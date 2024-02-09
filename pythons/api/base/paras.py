@@ -1,12 +1,7 @@
 import torch
 import numpy as np
-import pytorch_lightning as pl
-
-pl.seed_everything(2024)
-
 # 开式温度计算常数
-# K = 273.16
-K = 0
+K = 273.16
 
 # 单个电芯测点数量
 num_measure_point = 7
@@ -16,7 +11,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 paras_Prediction_State = {
     'current_to_soc': 2.561927693277231e+03,
-    'info_len': 2,
+    'info_len': 3,
     'state_len': 3,
     'seq_history': 1,
     'seq_predict': 200,
