@@ -32,6 +32,8 @@ class Prediction_State_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
+            # if condition == '低温充电':
+            #     continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
                 if int(module.split('-')[1]) in modules:
@@ -66,14 +68,17 @@ class Prediction_State_Dataset(Dataset):
 # 加载数据集
 path_data_origin_pkl = path_data_origin_pkl_sim
 # path_data_origin_pkl = path_data_origin_pkl_real
-dataset_train = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=True)
-dataset_val = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=False)
+
+dataset_train_val = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[0], flag_slide=True)
+train_set_size = int(len(dataset_train_val) * 0.8)
+valid_set_size = len(dataset_train_val) - train_set_size
+dataset_train, dataset_val = random_split(dataset_train_val, [train_set_size, valid_set_size])
 dataset_test = Prediction_State_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_State, modules=[1], flag_slide=False)
 
 # 分割train, test, val，并进行数据加载
 dataset_loader_train = DataLoader(dataset_train, batch_size=8, shuffle=True, pin_memory=True, num_workers=0)
 dataset_loader_val = DataLoader(dataset_val, batch_size=8, pin_memory=True, num_workers=0)
-dataset_loader_test = DataLoader(dataset_test, batch_size=5, pin_memory=True, num_workers=0)
+dataset_loader_test = DataLoader(dataset_test, batch_size=1, pin_memory=True, num_workers=0)
 paras_Prediction_State_dataset = {
     'dataset_loader_train': dataset_loader_train,
     'dataset_loader_val': dataset_loader_val,

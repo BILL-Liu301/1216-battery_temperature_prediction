@@ -22,8 +22,8 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
 
     # 找到ckpt
-    # path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
-    path_version = path_ckpt_best_version + 'state/version_0/checkpoints/'
+    path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
+    # path_version = path_ckpt_best_version + 'state/version_0/checkpoints/'
     ckpt = path_version + os.listdir(path_version)[0]
 
     # 设置训练器
@@ -33,16 +33,15 @@ if __name__ == '__main__':
     trainer.test(model=model, dataloaders=dataloaders)
 
     # 结果展示
-
     print(f'总计有{len(dataloaders.dataset)}组数据')
     states = ['Voltage', 'NTC_max', 'NTC_min']
     for state in states:
         test_loss = model.test_losses[state]
         loss_mean, loss_max, loss_min = torch.cat(test_loss['mean'], dim=0), torch.cat(test_loss['max'], dim=0), torch.cat(test_loss['min'], dim=0)
         print(f'{state}:')
-        print(f'\t平均均值误差：{loss_mean.mean()}(V?℃)')
-        print(f'\t平均最大误差：{loss_max.mean()}(V?℃)')
-        print(f'\t平均最小误差：{loss_min.mean()}(V?℃)')
+        print(f'\t平均均值误差：{loss_mean.mean()}(V?K)')
+        print(f'\t平均最大误差：{loss_max.mean()}(V?K)')
+        print(f'\t平均最小误差：{loss_min.mean()}(V?K)')
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_results = model.test_results[i]
         plot_for_prediction_state_val_test(fig, i, test_results, paras_Prediction_State)

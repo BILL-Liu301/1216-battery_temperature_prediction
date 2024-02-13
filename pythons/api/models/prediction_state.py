@@ -1,11 +1,10 @@
-import math
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler
-from scipy.stats import norm
 import pytorch_lightning as pl
+from scipy.stats import norm
 
 
 class Prediction_State_Module(nn.Module):
@@ -13,7 +12,6 @@ class Prediction_State_Module(nn.Module):
         super(Prediction_State_Module, self).__init__()
 
         # 基础参数
-        self.tanh = nn.Tanh()
         self.bias = False
         self.lstm_bidirectional = False
         if self.lstm_bidirectional:
@@ -28,35 +26,32 @@ class Prediction_State_Module(nn.Module):
         self.scale = paras['scale']
         self.info_len = paras['info_len']
         self.state_len = paras['state_len']
-        self.delta_limit_m_ = torch.from_numpy(paras['delta_limit_m_']).to(torch.float32).to(self.device)
+        self.delta_limit_mean = torch.from_numpy(paras['delta_limit_mean']).to(torch.float32).to(self.device)
         self.delta_limit_var = torch.from_numpy(paras['delta_limit_var']).to(torch.float32).to(self.device)
 
         # 对未来时序进行预测，分为两部分：
         #     mean：均值
         #     var：方差
         model_encode = nn.ModuleDict({
-            'for_lstm': nn.Sequential(nn.Linear(in_features=self.state_len, out_features=self.size_middle * 2, bias=self.bias),
-                                      nn.ReLU(), nn.Linear(in_features=self.size_middle * 2, out_features=self.size_middle, bias=self.bias))
+            'for_lstm': nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias)
         })
         model_attention = nn.ModuleDict({
-            'q': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle * 2, bias=self.bias),
-                               nn.ReLU(), nn.Linear(in_features=self.size_middle * 2, out_features=self.size_middle, bias=self.bias)),
-            'k': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle * 2, bias=self.bias),
-                               nn.ReLU(), nn.Linear(in_features=self.size_middle * 2, out_features=self.size_middle, bias=self.bias)),
-            'v': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle * 2, bias=self.bias),
-                               nn.ReLU(), nn.Linear(in_features=self.size_middle * 2, out_features=self.size_middle, bias=self.bias)),
+            'q': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias)),
+            'k': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias)),
+            'v': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias)),
             'attention': nn.MultiheadAttention(embed_dim=self.size_middle, num_heads=1, batch_first=True, bias=self.bias)
         })
         model_lstm = nn.ModuleDict({
-            'lstm': nn.LSTM(input_size=self.size_middle, hidden_size=self.size_middle, num_layers=self.num_layers, bidirectional=self.lstm_bidirectional,
-                            bias=self.bias, batch_first=True)
+            'lstm': nn.LSTM(input_size=self.size_middle, hidden_size=self.size_middle, num_layers=self.num_layers,
+                            bidirectional=self.lstm_bidirectional, bias=self.bias, batch_first=True)
         })
         self.h0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
         self.c0 = torch.ones([self.D * self.num_layers, 1, self.size_middle]).to(self.device)
         model_decode = nn.ModuleDict({
-            'for_mean': nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
+            'for_norm': nn.LayerNorm(normalized_shape=self.D * self.size_middle, elementwise_affine=False),
+            'for_mean': nn.Sequential(nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
                                       nn.Tanh()),
-            'for_var': nn.Sequential(nn.Tanh(), nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
+            'for_var': nn.Sequential(nn.Linear(in_features=self.D * self.size_middle, out_features=self.state_len, bias=self.bias),
                                      nn.Sigmoid())
         })
         self.model = nn.ModuleDict({
@@ -65,12 +60,6 @@ class Prediction_State_Module(nn.Module):
             'model_lstm': model_lstm,
             'model_decode': model_decode,
         })
-
-    def self_attention(self, qkv):
-        q, k, v = qkv
-        b = torch.matmul(k.transpose(1, 2), q)
-        oup = torch.matmul(v, self.tanh(b))
-        return oup
 
     def forward(self, inp_info_his, inp_state_his, inp_info, h_his=None, c_his=None):
         # inp_info_his: [B, 1, info_len]
@@ -85,8 +74,8 @@ class Prediction_State_Module(nn.Module):
         seqs = (seq_predict // self.seq_attention_once) if (seq_predict % self.seq_attention_once == 0) else (seq_predict // self.seq_attention_once + 1)
 
         # 数据初始化
-        info_ref = inp_info_his.clone()
-        state_ref = inp_state_his.clone()
+        info_ref = inp_info_his
+        state_ref = inp_state_his
         oup_mean, oup_var = list(), list()
 
         # 分段预测
@@ -95,19 +84,22 @@ class Prediction_State_Module(nn.Module):
             inp_info_seq = inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
 
             # 模型核心（LSTM）初始化
-            encode_for_lstm = self.model['model_encode']['for_lstm'](info_ref)
+            encode_for_lstm = self.model['model_encode']['for_lstm'](torch.cat((info_ref, state_ref), dim=-1))
             _, (h1, c1) = self.model['model_lstm']['lstm'](encode_for_lstm, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
 
             # attention
-            q, k, v = self.model['model_attention']['q'](inp_info_seq), self.model['model_attention']['k'](inp_info_seq), self.model['model_attention']['v'](inp_info_seq)
+            q, k, v = (self.model['model_attention']['q'](inp_info_seq),
+                       self.model['model_attention']['k'](inp_info_seq),
+                       self.model['model_attention']['v'](inp_info_seq))
             attentioned, _ = self.model['model_attention']['attention'](q, k, v)
 
             # lstm
             lstmed, _ = self.model['model_lstm']['lstm'](attentioned, (h1, c1))
 
             # 解码生成均值和方差
-            mean = self.model['model_decode']['for_mean'](lstmed) * self.delta_limit_m_ + state_ref
-            var = self.model['model_decode']['for_var'](lstmed) * self.delta_limit_var
+            normed = self.model['model_decode']['for_norm'](lstmed)
+            mean = self.model['model_decode']['for_mean'](normed) * self.delta_limit_mean + state_ref
+            var = self.model['model_decode']['for_var'](normed) * self.delta_limit_var
 
             # 数据拼接和参考更新
             oup_mean.append(mean)
@@ -164,7 +156,7 @@ class Prediction_State_LightningModule(pl.LightningModule):
         inp_state_his = batch[:, 0:self.seq_history, 4:7]  # 初始的电压、NTC_max和NTC_min
         inp_info = batch[:, self.seq_history:, 1:4]  # 未来的电流、SOC和环境温度
         pre_mean, pre_var, _ = self.model_state(inp_info_his, inp_state_his, inp_info)
-        ref_mean = batch[:, self.seq_history:, 3:6]
+        ref_mean = batch[:, self.seq_history:, 4:7]
         return pre_mean, pre_var, ref_mean
 
     def training_step(self, batch, batch_idx):

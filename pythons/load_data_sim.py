@@ -48,6 +48,8 @@ if __name__ == '__main__':
     # 遍历工况
     tbar_file = tqdm(battery_files, leave=False, ncols=100, disable=False)
     for battery_file in tbar_file:
+        if battery_file[0] == '~':
+            continue
         path_battery_file = path_data_t9m_sim + battery_file
 
         # 在dataset中加载工况
@@ -102,17 +104,16 @@ if __name__ == '__main__':
                 # 赋值给dataset_base
                 dataset_base['stamp'] = stamp.copy()
                 dataset_base['location'] = location.copy()
-                dataset_base['NTC'] = ntc.copy() + K
+                dataset_base['NTC'] = ntc.copy()
                 dataset_base['Voltage'] = voltage.copy()
                 dataset_base['Current'] = current.copy()
                 dataset_base['SOC'] = soc.copy()
-                dataset_base['Temperature_max'] = temperature_max + K
-                dataset_base['Temperature_min'] = temperature_min + K
+                dataset_base['Temperature_max'] = temperature_max
+                dataset_base['Temperature_min'] = temperature_min
 
                 # 赋值给dataset中对应的charging_condition
                 dataset[charging_condition][f'module-{module}'].update({f'{cell_start}~{cell_end}': dataset_base.copy()})
 
-        break
     with open(path_data_origin_pkl_sim, 'wb') as pkl:
         pickle.dump(dataset, pkl)
         pkl.close()
