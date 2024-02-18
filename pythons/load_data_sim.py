@@ -54,8 +54,10 @@ if __name__ == '__main__':
 
         # 在dataset中加载工况
         charging_condition = battery_file.split('_')[1]
-        dataset.update({charging_condition: dict()})
         tbar_file.set_description(charging_condition)
+        if charging_condition == '低温充电':
+            continue
+        dataset.update({charging_condition: dict()})
 
         # 从工况内提取数据
         data_xlsx_state = pd.read_excel(path_battery_file, sheet_name='电压电流SOC')

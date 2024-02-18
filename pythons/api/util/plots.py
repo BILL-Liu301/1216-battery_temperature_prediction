@@ -185,8 +185,8 @@ def plot_for_prediction_temperature_val_test(fig, title, _result, paras):
 
     # 输入：NTC温度
     plt.subplot(6, 1, 4)
-    plt.plot(xx, info[1], 'r', label='NTC-HEIGHT')
-    plt.plot(xx, info[2], 'b', label='NTC-LOW')
+    plt.plot(xx, info[4], 'r', label='NTC-HEIGHT')
+    plt.plot(xx, info[5], 'b', label='NTC-LOW')
     plt.xlim(xlim)
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
     plt.grid(True)
@@ -195,7 +195,7 @@ def plot_for_prediction_temperature_val_test(fig, title, _result, paras):
     # 输入：电压，电流
     plt.subplot(6, 1, 5)
     plt.plot(xx, info[3], 'r', label='Voltage')
-    plt.plot(xx, info[4], 'b', label='Current')
+    plt.plot(xx, info[1], 'b', label='Current')
     plt.xlim(xlim)
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
     plt.grid(True)
@@ -203,7 +203,7 @@ def plot_for_prediction_temperature_val_test(fig, title, _result, paras):
 
     # 输入：SOC
     plt.subplot(6, 1, 6)
-    plt.plot(xx, info[5], 'k', label='SOC/%')
+    plt.plot(xx, info[2], 'k', label='SOC/%')
     plt.xlim(xlim)
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
     plt.grid(True)

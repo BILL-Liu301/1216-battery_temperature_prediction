@@ -36,9 +36,9 @@ paras_Prediction_Temperature = {
     'seq_predict': 200,
     'seq_attention_once': 50,
     'split_length': 2,  # 取点间隔，间隔为n个数时，split_length=n+1
-    'max_epochs': 100,
+    'max_epochs': 400,
     'lr_init': 1e-3,
-    'size_middle': 32,
+    'size_middle': 8,
     'num_layers': 1,
     'device': device,
     'scale': 100

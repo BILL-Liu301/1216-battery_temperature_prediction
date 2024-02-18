@@ -1,6 +1,6 @@
 paras:
   current_to_soc: 2561.927693277231
-  delta_limit_m_: !!python/object/apply:numpy.core.multiarray._reconstruct
+  delta_limit_mean: !!python/object/apply:numpy.core.multiarray._reconstruct
     args:
     - &id001 !!python/name:numpy.ndarray ''
     - !!python/tuple
@@ -27,7 +27,7 @@ paras:
       - 0
     - false
     - !!binary |
-      AAAAAAAAWUAAAAAAAABZQAAAAAAAAFlA
+      AAAAAAAASUAAAAAAAABJQAAAAAAAAElA
   delta_limit_var: !!python/object/apply:numpy.core.multiarray._reconstruct
     args:
     - *id001
@@ -45,12 +45,12 @@ paras:
       AAAAAAAAJEAAAAAAAAAkQAAAAAAAACRA
   device: !!python/object/apply:torch.device
   - cuda
-  info_len: 2
+  info_len: 3
   lr_init: 0.001
   max_epochs: 100
-  num_layers: 2
+  num_layers: 1
   scale: 100
-  seq_attention_once: 100
+  seq_attention_once: 50
   seq_history: 1
   seq_predict: 200
   size_middle: 16
