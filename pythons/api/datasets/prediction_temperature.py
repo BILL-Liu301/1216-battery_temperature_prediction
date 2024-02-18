@@ -49,19 +49,6 @@ class Prediction_Temperature_Dataset(Dataset):
                                 data.append(torch.from_numpy(data_slide[:, 0:-1:self.split_length, slide].transpose().copy()).to(torch.float32))
                         else:
                             data.append(torch.from_numpy(data_origin[0:-1:self.split_length, :].copy()).to(torch.float32))
-
-        # for module in modules:
-        #     dataset_module = dataset[f'module-{module}']
-        #     for dataset_group in dataset_module:
-        #         data_group = np.concatenate([dataset_group['stamp'], dataset_group['location'], dataset_group['Current'], dataset_group['SOC'],
-        #                                      dataset_group['Voltage'], dataset_group['NTC_max'], dataset_group['NTC_min'],
-        #                                      np.max(dataset_group['Temperature_max'], axis=1, keepdims=True)], axis=1)
-        #         if self.flag_slide:
-        #             data_group_slide = librosa_util.frame(x=data_group.transpose(), frame_length=(self.seq_history + self.seq_predict) * self.split_length, hop_length=self.hop_length)
-        #             for slide in range(data_group_slide.shape[-1]):
-        #                 data.append(torch.from_numpy(data_group_slide[:, 0:-1:self.split_length, slide].transpose().copy()).to(torch.float32))
-        #         else:
-        #             data.append(torch.from_numpy(data_group[0:-1:self.split_length, :].copy()).to(torch.float32))
         return data
 
     def __len__(self):

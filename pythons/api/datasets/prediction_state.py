@@ -46,7 +46,7 @@ class Prediction_State_Dataset(Dataset):
                         voltage = dataset_group['Voltage']
                         ntc = dataset_group['NTC']
                         data_origin = np.concatenate([stamp, current, soc, condition,
-                                                      voltage, ntc.max(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True)],
+                                                      voltage, ntc.max(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True)],
                                                      axis=1)
                         # 数据分割与否
                         if self.flag_slide:

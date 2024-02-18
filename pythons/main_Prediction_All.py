@@ -8,10 +8,8 @@ import warnings
 from scipy.stats import norm
 from tqdm import tqdm
 
-from lightning_fabric.utilities.warnings import PossibleUserWarning
-
 from api.base.paras import paras_Prediction_All
-from api.datasets.prediction_all import paras_Prediction_All_dataset
+from api.datasets.prediction_all import dataset_test
 from api.models.prediction_state import Prediction_State_Module
 from api.models.prediction_temperature import Prediction_Temperature_Module
 from api.models.prediction_all import Prediction_All_Module
@@ -72,13 +70,12 @@ if __name__ == '__main__':
     criterion_test = nn.L1Loss(reduction='none')
 
     # 温度预测
-    dataset = paras_Prediction_All_dataset['dataset_loader_test']
-    for batch in tqdm(dataset, desc='Test', leave=False, ncols=100, disable=False):
+    for batch in tqdm(dataset_test, desc='Test', leave=False, ncols=100, disable=False):
         batch = batch.to(paras_Prediction_All['device'])
-        inp_his, inp_info = batch[:, 0:1, 2:], batch[:, 1:, 2:5]
+        inp_his, inp_info = batch[:, 0:1, 2:], batch[:, 1:, 2:6]
         with torch.no_grad():
             pre_mean, pre_var = model_all(inp_his, inp_info)
-        ref_mean = batch[:, 1:, 5:]
+        ref_mean = batch[:, 1:, 6:]
 
         losses = criterion_test(pre_mean, ref_mean)
         prob = np.abs(norm.cdf(ref_mean.cpu().numpy(), pre_mean.cpu().numpy(), torch.sqrt(pre_var).cpu().numpy()) - 0.5) * 2 * 100
@@ -109,7 +106,7 @@ if __name__ == '__main__':
             test_losses['Temperature']['min'].append(loss[:, 3].min().unsqueeze(0))
 
     # 结果展示
-    print(f'总计有{len(dataset.dataset)}组数据')
+    print(f'总计有{len(dataset_test)}组数据')
     states = ['Voltage', 'NTC_max', 'NTC_min', 'Temperature']
     for state in states:
         test_loss = test_losses[state]

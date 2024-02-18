@@ -22,8 +22,8 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore', category=UserWarning)
 
     # 找到ckpt
-    path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
-    # path_version = path_ckpt_best_version + 'state/version_0/checkpoints/'
+    # path_version = path_ckpts + 'lightning_logs/version_0/checkpoints/'
+    path_version = path_ckpt_best_version + 'state/version_0/checkpoints/'
     ckpt = path_version + os.listdir(path_version)[0]
 
     # 设置训练器

@@ -62,9 +62,9 @@ class Prediction_State_Module(nn.Module):
         })
 
     def forward(self, inp_info_his, inp_state_his, inp_info, h_his=None, c_his=None):
-        # inp_info_his: [B, 1, info_len]
-        # inp_state_his: [B, 1, state_len]
-        # inp_info: [B, seq_prediction, info_len]
+        # inp_info_his: [B, 1, [current, soc, condition]]
+        # inp_state_his: [B, 1, [voltage, ntc_max, ntc_min]]
+        # inp_info: [B, seq_prediction, [current, soc, condition]]
 
         # 提取尺寸
         batch_size = inp_info.shape[0]

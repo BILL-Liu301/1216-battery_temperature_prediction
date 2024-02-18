@@ -65,9 +65,9 @@ class Prediction_Temperature_Module(nn.Module):
         })
 
     def forward(self, inp_info_his, inp_temperature_his, inp_info, h_his=None, c_his=None):
-        # inp_info_his: [B, 1, info_len]
-        # inp_temperature_his: [B, 1, 1]
-        # inp_info: [B, seq_prediction, info_len]
+        # inp_info_his: [B, 1, [location, current, soc, voltage, ntc_max, ntc_min]]
+        # inp_temperature_his: [B, 1, [temperature_max]]
+        # inp_info: [B, seq_prediction, [location, current, soc, voltage, ntc_max, ntc_min]]
 
         # 提取尺寸
         batch_size = inp_info.shape[0]

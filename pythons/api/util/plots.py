@@ -235,7 +235,9 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     ## Current
     ax = plt.subplot(8, 2, 3)
     ## 提取数据
-    plt.plot(xx, _result['origin'][3], 'k')
+    current = _result['origin'][3]
+    ## 绘制数据
+    plt.plot(xx, current, 'k')
     ## 设定样式
     xlim = plt.xlim()
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
@@ -246,8 +248,11 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     ## SOC
     ax = plt.subplot(4, 2, 2)
     ## 提取数据
-    plt.plot(xx, _result['origin'][1], 'k--', label='ref')
-    plt.plot(xx, _result['origin'][4], 'k', label='pre')
+    soc_ref = _result['origin'][1]
+    soc_pre = _result['origin'][4]
+    ## 绘制数据
+    plt.plot(xx, soc_ref, 'k--', label='ref')
+    plt.plot(xx, soc_pre, 'k', label='pre')
     ## 设定样式
     plt.xlim(xlim)
     plt.xticks(np.arange(np.floor(xx[0]), np.floor(xx[-1]), 50))
@@ -261,11 +266,12 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     # 电压
     ax = plt.subplot(4, 2, 3)
     ## 提取数据
-    pre_mean = np.append(_result['origin'][5, 0:1], _result['pre_mean'][0], axis=0)
+    ref = _result['origin'][6]
+    pre_mean = np.append(_result['origin'][6, 0:1], _result['pre_mean'][0], axis=0)
     pre_std = np.append(np.zeros(1), _result['pre_std'][0], axis=0)
     prob = np.append(np.zeros(1), _result['prob'][0], axis=0)
     ## 绘制数据
-    plt.plot(xx, _result['origin'][5], 'k--', label='ref')
+    plt.plot(xx, ref, 'k--', label='ref')
     plt.plot(xx, pre_mean, 'k', label='pre')
     ## 绘制分布
     x = np.append(xx, np.flip(xx), axis=0)
@@ -303,13 +309,14 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     # NTC
     ax = plt.subplot(4, 2, 5)
     ## 提取数据
-    pre_mean = np.append(_result['origin'][6:8, 0:1], _result['pre_mean'][1:3], axis=1)
+    ref = _result['origin'][7:9]
+    pre_mean = np.append(_result['origin'][7:9, 0:1], _result['pre_mean'][1:3], axis=1)
     pre_std = np.append(np.zeros([2, 1]), _result['pre_std'][1:3], axis=1)
     prob = np.append(np.zeros([2, 1]), _result['prob'][1:3], axis=1)
     ## 绘制数据
-    plt.plot(xx, _result['origin'][6], 'r--', label='ref_max')
+    plt.plot(xx, ref[0], 'r--', label='ref_max')
     plt.plot(xx, pre_mean[0], 'r', label='pre_max')
-    plt.plot(xx, _result['origin'][7], 'b--', label='ref_min')
+    plt.plot(xx, ref[1], 'b--', label='ref_min')
     plt.plot(xx, pre_mean[1], 'b', label='pre_min')
     ## 绘制分布
     x = np.append(xx, np.flip(xx), axis=0)
@@ -357,11 +364,12 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     # 温度
     ax = plt.subplot(4, 2, 7)
     ## 提取数据
-    pre_mean = np.append(_result['origin'][8, 0:1], _result['pre_mean'][3], axis=0)
+    ref = _result['origin'][9]
+    pre_mean = np.append(_result['origin'][9, 0:1], _result['pre_mean'][3], axis=0)
     pre_std = np.append(np.zeros(1), _result['pre_std'][3], axis=0)
     prob = np.append(np.zeros(1), _result['prob'][3], axis=0)
     ## 绘制数据
-    plt.plot(xx, _result['origin'][8], 'k--', label='ref')
+    plt.plot(xx, ref, 'k--', label='ref')
     plt.plot(xx, pre_mean, 'k', label='pre')
     ## 绘制分布
     x = np.append(xx, np.flip(xx), axis=0)
