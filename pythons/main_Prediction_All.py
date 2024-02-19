@@ -75,7 +75,7 @@ if __name__ == '__main__':
         inp_his, inp_info = batch[:, 0:1, 2:], batch[:, 1:, 2:6]
         with torch.no_grad():
             pre_mean, pre_var = model_all(inp_his, inp_info)
-        ref_mean = batch[:, 1:, 6:]
+            ref_mean = batch[:, 1:, 6:]
 
         losses = criterion_test(pre_mean, ref_mean)
         prob = np.abs(norm.cdf(ref_mean.cpu().numpy(), pre_mean.cpu().numpy(), torch.sqrt(pre_var).cpu().numpy()) - 0.5) * 2 * 100

@@ -27,7 +27,7 @@ paras:
       - 0
     - false
     - !!binary |
-      AAAAAAAASUAAAAAAAABJQAAAAAAAAElA
+      AAAAAAAASUAAAAAAAAAUQAAAAAAAABRA
   delta_limit_var: !!python/object/apply:numpy.core.multiarray._reconstruct
     args:
     - *id001
@@ -47,12 +47,12 @@ paras:
   - cuda
   info_len: 3
   lr_init: 0.001
-  max_epochs: 100
+  max_epochs: 200
   num_layers: 1
   scale: 100
   seq_attention_once: 50
   seq_history: 1
   seq_predict: 200
-  size_middle: 16
+  size_middle: 8
   split_length: 2
   state_len: 3

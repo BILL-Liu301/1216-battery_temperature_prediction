@@ -34,6 +34,6 @@ if __name__ == '__main__':
     timer = Timer(duration='00:01:00:00', verbose=True)
     trainer = pl.Trainer(log_every_n_steps=1, max_epochs=paras_Prediction_State['max_epochs'], check_val_every_n_epoch=1,
                          default_root_dir=path_ckpts, accelerator='gpu', devices=1,
-                         callbacks=[early_stop_callback, model_checkpoint, model_summery, timer, gradient_accumulation_scheduler])
+                         callbacks=[model_checkpoint, model_summery, timer, gradient_accumulation_scheduler])
     trainer.fit(model=model_lighting, train_dataloaders=paras_Prediction_State_dataset['dataset_loader_train'],
                 val_dataloaders=paras_Prediction_State_dataset['dataset_loader_val'])

@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
 
 
 class Prediction_All_Module(nn.Module):
@@ -9,7 +8,7 @@ class Prediction_All_Module(nn.Module):
         self.model_state = model_state
         self.model_temperature = model_temperature
 
-    def forward(self, inp_his, inp_info):
+    def forward(self, inp_his, inp_info, ref_mean, batch):
         # inp_his: [25, 1, [location, current, soc, condition, voltage, ntc_max, ntc_min, temperature_max]]
         # inp_info: [25, seq_predict, [location, current, soc, condition]]
 

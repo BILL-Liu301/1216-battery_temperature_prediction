@@ -33,7 +33,8 @@ class Prediction_State_Module(nn.Module):
         #     mean：均值
         #     var：方差
         model_encode = nn.ModuleDict({
-            'for_lstm': nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias)
+            'for_init': nn.Linear(in_features=self.state_len + self.info_len, out_features=self.size_middle, bias=self.bias),
+            'for_lstm': nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias)
         })
         model_attention = nn.ModuleDict({
             'q': nn.Sequential(nn.Linear(in_features=self.info_len, out_features=self.size_middle, bias=self.bias)),
@@ -84,7 +85,7 @@ class Prediction_State_Module(nn.Module):
             inp_info_seq = inp_info[:, seq * self.seq_attention_once:(seq + 1) * self.seq_attention_once]
 
             # 模型核心（LSTM）初始化
-            encode_for_lstm = self.model['model_encode']['for_lstm'](torch.cat((info_ref, state_ref), dim=-1))
+            encode_for_lstm = self.model['model_encode']['for_init'](torch.cat((info_ref, state_ref), dim=-1))
             _, (h1, c1) = self.model['model_lstm']['lstm'](encode_for_lstm, (self.h0.repeat(1, batch_size, 1), self.c0.repeat(1, batch_size, 1)))
 
             # attention
@@ -95,17 +96,19 @@ class Prediction_State_Module(nn.Module):
 
             # lstm
             lstmed, _ = self.model['model_lstm']['lstm'](attentioned, (h1, c1))
+            # lstmed, _ = self.model['model_lstm']['lstm'](self.model['model_encode']['for_lstm'](inp_info_seq), (h1, c1))
 
             # 解码生成均值和方差
-            normed = self.model['model_decode']['for_norm'](lstmed)
-            mean = self.model['model_decode']['for_mean'](normed) * self.delta_limit_mean + state_ref
-            var = self.model['model_decode']['for_var'](normed) * self.delta_limit_var
+            cumsum = torch.cumsum(lstmed, dim=1)
+            # normed = self.model['model_decode']['for_norm'](lstmed)
+            mean = self.model['model_decode']['for_mean'](cumsum) * self.delta_limit_mean + state_ref
+            var = self.model['model_decode']['for_var'](cumsum) * self.delta_limit_var
 
             # 数据拼接和参考更新
             oup_mean.append(mean)
             oup_var.append(var)
-            info_ref = inp_info_seq[:, -1:]
-            state_ref = mean[:, -1:]
+            info_ref = inp_info_seq[:, -1:].clone()
+            state_ref = mean[:, -1:].clone()
 
         oup_mean = torch.cat(oup_mean, dim=1)
         oup_var = torch.cat(oup_var, dim=1)

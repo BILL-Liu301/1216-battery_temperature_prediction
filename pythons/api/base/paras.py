@@ -18,13 +18,13 @@ paras_Prediction_State = {
     'seq_predict': 200,
     'seq_attention_once': 50,
     'split_length': 2,  # 取点间隔，间隔为n个数时，split_length=n+1
-    'max_epochs': 100,
+    'max_epochs': 200,
     'lr_init': 1e-3,
-    'size_middle': 16,
+    'size_middle': 8,
     'num_layers': 1,
     'device': device,
     'scale': 100,
-    'delta_limit_mean': np.array([50.0, 50.0, 50.0]),
+    'delta_limit_mean': np.array([50.0, 5.0, 5.0]),
     'delta_limit_var': np.array([10.0, 10.0, 10.0])
 }
 

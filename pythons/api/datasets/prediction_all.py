@@ -52,7 +52,7 @@ class Prediction_All_Dataset(Dataset):
 
                         data_temp = np.concatenate([stamp, dataset_group['SOC'], location, current, soc, condition, voltage, ntc_max, ntc_min, temperature_max],
                                                    axis=1)
-                        data_module.append(np.expand_dims(data_temp, axis=0))
+                        data_module.append(np.expand_dims(data_temp[0:-1:self.split_length, :], axis=0))
                     data.append(torch.from_numpy(np.concatenate(data_module, axis=0)).to(torch.float32))
         return data
 
