@@ -19,6 +19,8 @@ from pythons.api.util.plots import plot_for_prediction_all_val_test
 if __name__ == '__main__':
     pl.seed_everything(2024)
     fig = plt.figure(figsize=(20, 11.25))
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置显示中文字体
+    plt.rcParams['axes.unicode_minus'] = False  # 设置正常显示符号
 
     # 找到ckpt
     path_model_state = path_ckpt_best_version + 'state/version_0/checkpoints/'
@@ -117,6 +119,10 @@ if __name__ == '__main__':
         print(f'\t平均最小误差：{loss_min.mean():.4f}V?℃')
     for i in tqdm(range(0, len(test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_result = test_results[i]
-        plot_for_prediction_all_val_test(fig, i, test_result, paras_Prediction_All)
+        if i <= 24:
+            name = dataset_test.data_condition[0]
+        else:
+            name = dataset_test.data_condition[1]
+        plot_for_prediction_all_val_test(fig, f'{name}_{i}', test_result, paras_Prediction_All)
         plt.savefig(path_figs_test + f'{i}.png')
 

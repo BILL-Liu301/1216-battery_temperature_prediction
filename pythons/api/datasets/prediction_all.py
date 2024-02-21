@@ -14,6 +14,7 @@ class Prediction_All_Dataset(Dataset):
         self.split_length = paras['split_length']  # 取点间隔，间隔为n个数时，split_length=n+1
         self.modules = [0] if (modules is None) else modules
         self.seq_history, self.seq_predict, self.current_to_soc = paras['seq_history'], paras['seq_predict'], paras['current_to_soc']
+        self.data_condition = []
         self.data = self.load_from_pkl(path_data, self.modules)
 
     def integral_i(self, stamp, current, soc_0):
@@ -44,16 +45,17 @@ class Prediction_All_Dataset(Dataset):
                         location = dataset_group['location']
                         current = dataset_group['Current']
                         soc = self.integral_i(stamp, current, dataset_group['SOC'][0, 0])
-                        condition = np.ones(soc.shape) * dataset_group['NTC'].mean(axis=1)[0]
+                        condition_temperature = np.ones(soc.shape) * dataset_group['NTC'].mean(axis=1)[0]
                         voltage = dataset_group['Voltage']
                         ntc_max = dataset_group['NTC'].max(axis=1, keepdims=True)
                         ntc_min = dataset_group['NTC'].min(axis=1, keepdims=True)
                         temperature_max = dataset_group['Temperature_max'].min(axis=1, keepdims=True)
 
-                        data_temp = np.concatenate([stamp, dataset_group['SOC'], location, current, soc, condition, voltage, ntc_max, ntc_min, temperature_max],
+                        data_temp = np.concatenate([stamp, dataset_group['SOC'], location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max],
                                                    axis=1)
                         data_module.append(np.expand_dims(data_temp[0:-1:self.split_length, :], axis=0))
                     data.append(torch.from_numpy(np.concatenate(data_module, axis=0)).to(torch.float32))
+                    self.data_condition.append(f'{condition}_{module}')
         return data
 
     def __len__(self):

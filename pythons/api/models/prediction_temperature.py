@@ -27,7 +27,7 @@ class Prediction_Temperature_Module(nn.Module):
         self.scale = paras['scale']
         self.info_len = paras['info_len']
         self.delta_limit_mean = 5
-        self.delta_limit_var = 10
+        self.delta_limit_var = 5
 
         # 对未来时序进行预测，pre
         # 分为两部分：

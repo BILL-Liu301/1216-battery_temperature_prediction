@@ -67,8 +67,8 @@ valid_set_size = len(dataset_train_val) - train_set_size
 dataset_train, dataset_val = random_split(dataset_train_val, [train_set_size, valid_set_size])
 dataset_test = Prediction_Temperature_Dataset(path_data=path_data_origin_pkl, paras=paras_Prediction_Temperature, modules=[1], flag_slide=False)
 
-dataset_loader_train = DataLoader(dataset_train, batch_size=256, shuffle=True, pin_memory=True, num_workers=0)
-dataset_loader_val = DataLoader(dataset_val, batch_size=256, pin_memory=True, num_workers=0)
+dataset_loader_train = DataLoader(dataset_train, batch_size=32, shuffle=True, pin_memory=True, num_workers=0)
+dataset_loader_val = DataLoader(dataset_val, batch_size=32, pin_memory=True, num_workers=0)
 dataset_loader_test = DataLoader(dataset_test, batch_size=25, pin_memory=True, num_workers=0)
 paras_Prediction_Temperature_dataset = {
     'dataset_loader_train': dataset_loader_train,

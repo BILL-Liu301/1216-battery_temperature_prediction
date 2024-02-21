@@ -55,8 +55,8 @@ if __name__ == '__main__':
         # 在dataset中加载工况
         charging_condition = battery_file.split('_')[1]
         tbar_file.set_description(charging_condition)
-        if charging_condition == '低温充电':
-            continue
+        # if charging_condition == '低温充电':
+        #     continue
         dataset.update({charging_condition: dict()})
 
         # 从工况内提取数据
@@ -91,7 +91,10 @@ if __name__ == '__main__':
             else:
                 tbar_group = tqdm(range(num_group - 1, -1, -1), desc='Group', leave=False, ncols=100, disable=False)
             for group in tbar_group:
-                location = np.ones([stamp.shape[0], 1]) * group / (num_group - 1)
+                if module == 0:
+                    location = np.ones([stamp.shape[0], 1]) * group / (num_group - 1) * 100
+                else:
+                    location = np.ones([stamp.shape[0], 1]) * (24 - group) / (num_group - 1) * 100
                 cell_start, cell_end = group * num_cell_in_group + module * 100, (group + 1) * num_cell_in_group - 1 + module * 100
                 tbar_group.set_description(f'电芯组 {cell_start}~{cell_end} ')
 

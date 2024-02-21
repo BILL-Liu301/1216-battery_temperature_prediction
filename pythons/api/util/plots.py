@@ -220,7 +220,7 @@ def plot_for_prediction_all_val_test(fig, title, _result, paras):
     # location, Current, SOC
     ## location
     ax = plt.subplot(8, 2, 1)
-    location = round(_result['origin'][2, 0] * 24)
+    location = round(_result['origin'][2, 0] / 100 * 24)
     for loc in range(25):
         if loc == location:
             plt.bar(loc + 1, 1, 0.5, color='r', alpha=0.7)
