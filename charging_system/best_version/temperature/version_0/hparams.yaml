@@ -1,0 +1,14 @@
+paras:
+  device: !!python/object/apply:torch.device
+  - cuda
+  info_len: 6
+  lr_init: 0.001
+  max_epochs: 400
+  num_layers: 1
+  num_measure_point: 7
+  scale: 100
+  seq_attention_once: 50
+  seq_history: 1
+  seq_predict: 200
+  size_middle: 8
+  split_length: 2
