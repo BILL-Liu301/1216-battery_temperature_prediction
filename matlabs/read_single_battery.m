@@ -4,7 +4,7 @@ figure
 
 %% 读取xlsx内数据，分析不同电芯的不同点温度随时间变化趋势
 % 基础参数
-path_xlsx = "../datas/T9M充电数据汲内阻-to华工.xlsx";
+path_xlsx = "../datas/real/T9M充电数据汲内阻-to华工.xlsx";
 Mx = "02-";
 
 % 读取xlsx数据

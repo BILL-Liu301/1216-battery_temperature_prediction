@@ -9,8 +9,8 @@ class Prediction_All_Module(nn.Module):
         self.model_temperature = model_temperature
 
     def forward(self, inp_his, inp_info):
-        # inp_his: [25, 1, [location, current, soc, condition, voltage, ntc_max, ntc_min, temperature_max]]
-        # inp_info: [25, seq_predict, [location, current, soc, condition]]
+        # inp_his: [25, 1, [location, current, soc, condition_data, voltage, ntc_max, ntc_min, temperature_max]]
+        # inp_info: [25, seq_predict, [location, current, soc, condition_data]]
 
         oup_m_state, oup_var_state, _ = self.model_state(inp_his[:, :, 1:4], inp_his[:, :, 4:7], inp_info[:, :, 1:4], h_his=None, c_his=None)
         inp_info = torch.cat([inp_info[:, :, :-1], oup_m_state], dim=2)  # [25, seq_predict, [location, current, soc, voltage, ntc_max, ntc_min]]

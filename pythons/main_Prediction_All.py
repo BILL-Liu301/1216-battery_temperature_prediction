@@ -6,14 +6,16 @@ import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import warnings
 from scipy.stats import norm
+from scipy.io import savemat
 from tqdm import tqdm
+from translate import Translator
 
 from api.base.paras import paras_Prediction_All
 from api.datasets.prediction_all import dataset_test
 from api.models.prediction_state import Prediction_State_Module
 from api.models.prediction_temperature import Prediction_Temperature_Module
 from api.models.prediction_all import Prediction_All_Module
-from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test
+from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test, path_mat
 from pythons.api.util.plots import plot_for_prediction_all_val_test
 
 if __name__ == '__main__':
@@ -21,6 +23,7 @@ if __name__ == '__main__':
     fig = plt.figure(figsize=(20, 11.25))
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置显示中文字体
     plt.rcParams['axes.unicode_minus'] = False  # 设置正常显示符号
+    trans = Translator(from_lang='Chinese', to_lang='English')
 
     # 找到ckpt
     path_model_state = path_ckpt_best_version + 'state/version_0/checkpoints/'
@@ -72,18 +75,29 @@ if __name__ == '__main__':
     criterion_test = nn.L1Loss(reduction='none')
 
     # 温度预测
-    for batch in tqdm(dataset_test, desc='Test', leave=False, ncols=100, disable=False):
-        batch = batch.to(paras_Prediction_All['device'])
-        inp_his, inp_info = batch[:, 0:1, 2:], batch[:, 1:, 2:6]
+    data_mat, condition_id = dict(), 0
+    for condition, condition_data in tqdm(dataset_test.data.items(), desc='Test', leave=False, ncols=100, disable=False):
+        condition_data = condition_data.to(paras_Prediction_All['device'])
+        inp_his, inp_info = condition_data[:, 0:1, 2:], condition_data[:, 1:, 2:6]
         with torch.no_grad():
             pre_mean, pre_var = model_all(inp_his, inp_info)
-            ref_mean = batch[:, 1:, 6:]
-
+            ref_mean = condition_data[:, 1:, 6:]
         losses = criterion_test(pre_mean, ref_mean)
+
+        # 将数据保存成.mat文件
+        savemat(path_mat + condition + '.mat', {
+            'origin': condition_data.cpu().numpy(),
+            'pre_mean': pre_mean.cpu().numpy(),
+            'pre_var': pre_var.cpu().numpy(),
+            'ref_mean': ref_mean.cpu().numpy(),
+            'losses': losses.cpu().numpy()
+        })
+
+        # 在python内绘制结果
         prob = np.abs(norm.cdf(ref_mean.cpu().numpy(), pre_mean.cpu().numpy(), torch.sqrt(pre_var).cpu().numpy()) - 0.5) * 2 * 100
-        for b in range(len(batch)):
+        for b in range(len(condition_data)):
             test_results.append({
-                'origin': batch[b].T.cpu().numpy(),
+                'origin': condition_data[b].T.cpu().numpy(),
                 'pre_mean': pre_mean[b].T.cpu().numpy(),
                 'pre_std': np.sqrt(pre_var[b].T.cpu().numpy()),
                 'ref_mean': ref_mean[b].T.cpu().numpy(),
@@ -120,9 +134,13 @@ if __name__ == '__main__':
     for i in tqdm(range(0, len(test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_result = test_results[i]
         if i <= 24:
+            group_id = i
             name = dataset_test.data_condition[0]
-        else:
+        elif 25 <= i <= 49:
+            group_id = i - 25
             name = dataset_test.data_condition[1]
-        plot_for_prediction_all_val_test(fig, f'{name}_{i}', test_result, paras_Prediction_All)
+        else:
+            group_id = i - 50
+            name = dataset_test.data_condition[2]
+        plot_for_prediction_all_val_test(fig, f'{name}_{group_id + 1}', test_result, paras_Prediction_All)
         plt.savefig(path_figs_test + f'{i}.png')
-

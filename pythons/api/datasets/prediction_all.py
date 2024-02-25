@@ -28,11 +28,11 @@ class Prediction_All_Dataset(Dataset):
         with open(path_data, 'rb') as pkl:
             dataset = pickle.load(pkl)
             pkl.close()
-        data = list()
+        data = dict()
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            # if condition == '低温充电':
+            # if condition_data == '低温充电':
             #     continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
@@ -54,7 +54,7 @@ class Prediction_All_Dataset(Dataset):
                         data_temp = np.concatenate([stamp, dataset_group['SOC'], location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max],
                                                    axis=1)
                         data_module.append(np.expand_dims(data_temp[0:-1:self.split_length, :], axis=0))
-                    data.append(torch.from_numpy(np.concatenate(data_module, axis=0)).to(torch.float32))
+                    data.update({condition: torch.from_numpy(np.concatenate(data_module, axis=0)).to(torch.float32)})
                     self.data_condition.append(f'{condition}_{module}')
         return data
 
@@ -62,7 +62,7 @@ class Prediction_All_Dataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, item):
-        return self.data[item]
+        return self.data[list(self.data.keys())[item]]
 
 
 # 加载数据集

@@ -25,8 +25,8 @@ class Prediction_Temperature_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            # if condition == '低温充电':
-            #     continue
+            if condition == '低温充电':
+                continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
                 if int(module.split('-')[1]) in modules:
