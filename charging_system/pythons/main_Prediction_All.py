@@ -4,11 +4,9 @@ import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
-import warnings
 from scipy.stats import norm
-from scipy.io import savemat
+from scipy.io import savemat2
 from tqdm import tqdm
-from translate import Translator
 
 from api.base.paras import paras_Prediction_All
 from api.datasets.prediction_all import dataset_test
@@ -16,14 +14,13 @@ from api.models.prediction_state import Prediction_State_Module
 from api.models.prediction_temperature import Prediction_Temperature_Module
 from api.models.prediction_all import Prediction_All_Module
 from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test, path_mat
-from pythons.api.util.plots import plot_for_prediction_all_val_test
+from api.util.plots import plot_for_prediction_all_val_test
 
 if __name__ == '__main__':
     pl.seed_everything(2024)
     fig = plt.figure(figsize=(20, 11.25))
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置显示中文字体
     plt.rcParams['axes.unicode_minus'] = False  # 设置正常显示符号
-    trans = Translator(from_lang='Chinese', to_lang='English')
 
     # 找到ckpt
     path_model_state = path_ckpt_best_version + 'state/version_0/checkpoints/'
