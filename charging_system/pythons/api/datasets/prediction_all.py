@@ -4,8 +4,8 @@ import numpy as np
 import librosa.util as librosa_util
 from torch.utils.data import Dataset, random_split, DataLoader
 
-from pythons.api.base.paras import paras_Prediction_All
-from pythons.api.base.paths import path_data_origin_pkl_real, path_data_origin_pkl_sim
+from api.base.paras import paras_Prediction_All
+from api.base.paths import path_data_origin_pkl_real, path_data_origin_pkl_sim
 
 
 class Prediction_All_Dataset(Dataset):
