@@ -32,7 +32,7 @@ class Prediction_All_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            # if condition_data == '低温充电':
+            # if condition == '低温充电':
             #     continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
