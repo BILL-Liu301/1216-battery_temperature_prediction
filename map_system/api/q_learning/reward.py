@@ -7,4 +7,4 @@ class Reward:
         if temperature <= 0:
             return temperature
         else:
-            return 20 / temperature * self.weight[0] + soc * self.weight[1]
+            return 25 / temperature * self.weight[0] + soc * self.weight[1]

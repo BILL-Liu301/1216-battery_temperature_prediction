@@ -7,6 +7,7 @@ from charging_system.pythons.api.models.prediction_temperature import Prediction
 
 class Charging_System:
     def __init__(self, path_ckpt):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_state, self.model_temperature = self.load_model(path_ckpt)
 
 
@@ -30,6 +31,23 @@ class Charging_System:
             key_new = key[(len(key.split('.')[0]) + 1):]
             ckpt['state_dict'].update({key_new: ckpt['state_dict'].pop(key)})
         model_temperature.load_state_dict(state_dict=ckpt['state_dict'])
-        return model_state, model_temperature
+        return model_state.to(self.device).eval(), model_temperature.to(self.device).eval()
 
+    def charging(self, charging_data):
+        # charging_data: [25, charging_stamp, [stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max]]
+        # 将数据移至device
+        charging_data = torch.from_numpy(charging_data).to(torch.float32).to(self.device)
+
+        with torch.no_grad():
+            # 使用模型预测state
+            oup_m_state, oup_var_state, _ = self.model_state(charging_data[:, 0:1, 2:5], charging_data[:, 0:1, 5:8], charging_data[:, 1:, 2:5])
+            charging_data[:, 1:, 5:8] = oup_m_state
+
+            # 使用模型预测temperature
+            oup_m_temperature, oup_var_temperature, _ = self.model_temperature(torch.cat([charging_data[:, 0:1, 1:4], charging_data[:, 0:1, 5:8]], dim=2),
+                                                                               charging_data[:, 0:1, -1:],
+                                                                               torch.cat([charging_data[:, 1:, 1:4], charging_data[:, 1:, 5:8]], dim=2))
+            charging_data[:, 1:, -1:] = oup_m_temperature
+
+        return charging_data.cpu().numpy()
 

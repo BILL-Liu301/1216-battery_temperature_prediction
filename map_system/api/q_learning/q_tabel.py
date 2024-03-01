@@ -15,7 +15,7 @@ class MAP_Tabel:
         return temperature_labels, soc_labels, tabel
 
     def change_tabel(self, temperature_1, soc_1, new_data):
-        self.tabel[self.soc_labels[soc_1]][temperature_1] = new_data
+        self.tabel.loc[temperature_1, self.soc_labels[soc_1]] = new_data
 
     def search_tabel(self, value, labels):
         value_id = 0
