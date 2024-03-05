@@ -18,7 +18,7 @@ class Learning_Core:
         self.alpha = 0.001
         self.gamma = 0.001
         self.episode_max = 200
-        self.charging_time = 50
+        self.charging_time = 51
         num_condition = 20
         self.condition = self.init_condition(num_condition)
 

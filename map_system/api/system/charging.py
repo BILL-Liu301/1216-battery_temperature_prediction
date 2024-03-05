@@ -41,28 +41,7 @@ class Charging_System:
         soc = soc / 2.561927693277231e+03 + soc_0
         return soc
 
-    def charging(self, num_group, split_time, charging_time, current, state_0):
-        temperature_0, soc_0, voltage_0 = state_0
-
-        # charging_data: [25, charging_stamp, [stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max]]
-        charging_data = list()
-        # 计算通用数据
-        stamp = np.linspace(start=1, stop=charging_time, num=charging_time).reshape(-1, 1)
-        current = np.ones([charging_time, 1]) * current
-        soc = self.integral_current(stamp, current, soc_0)
-        condition_temperature = np.ones([charging_time, 1]) * temperature_0
-        voltage = np.ones([charging_time, 1]) * voltage_0
-        ntc_max = np.ones([charging_time, 1]) * temperature_0
-        ntc_min = np.ones([charging_time, 1]) * temperature_0
-        temperature_max = np.ones([charging_time, 1]) * temperature_0
-
-        for group in range(num_group):
-            # 计算各组独有数据
-            location = np.ones([charging_time, 1]) * group / (num_group - 1) * 100
-
-            # 组合数据
-            charging_data.append(np.concatenate([stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max], axis=1)[None, :])
-        charging_data = np.concatenate(charging_data, axis=0)[:, 0:-1:split_time]
+    def call_model(self, charging_data):
         # 将数据移至device
         charging_data = torch.from_numpy(charging_data).to(torch.float32).to(self.device)
 
@@ -78,4 +57,32 @@ class Charging_System:
             charging_data[:, 1:, -1:] = oup_m_temperature
 
         return charging_data.cpu().numpy()
+
+    def charging(self, num_group, split_time, charging_time, current, state_0, condition_temperature=None, ntc_max=None, ntc_min=None):
+        temperature_0, soc_0, voltage_0 = state_0
+
+        # charging_data: [25, charging_stamp, [stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max]]
+        charging_data = list()
+        # 计算通用数据
+        stamp = np.linspace(start=1, stop=charging_time, num=charging_time).reshape(-1, 1)
+        current = np.ones([charging_time, 1]) * current
+        soc = self.integral_current(stamp, current, soc_0)
+        condition_temperature = np.ones([charging_time, 1]) * (temperature_0 if (condition_temperature is None) else condition_temperature)
+        voltage = np.ones([charging_time, 1]) * voltage_0
+        ntc_max = np.ones([charging_time, 1]) * (temperature_0 if (ntc_max is None) else ntc_max)
+        ntc_min = np.ones([charging_time, 1]) * (temperature_0 if (ntc_min is None) else ntc_min)
+        temperature_max = np.ones([charging_time, 1]) * temperature_0
+
+        for group in range(num_group):
+            # 计算各组独有数据
+            location = np.ones([charging_time, 1]) * group / (num_group - 1) * 100
+
+            # 组合数据
+            charging_data.append(np.concatenate([stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max], axis=1)[None, :])
+        charging_data = np.concatenate(charging_data, axis=0)[:, 0:-1:split_time]
+
+        # 呼叫模型
+        charging_data = self.call_model(charging_data)
+
+        return charging_data
 
