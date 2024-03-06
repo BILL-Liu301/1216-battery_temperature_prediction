@@ -58,13 +58,13 @@ class Charging_System:
 
         return charging_data.cpu().numpy()
 
-    def charging(self, num_group, split_time, charging_time, current, state_0, condition_temperature=None, ntc_max=None, ntc_min=None):
+    def charging(self, num_group, split_time, charging_time, current, state_0, stamp_start=None, condition_temperature=None, ntc_max=None, ntc_min=None):
         temperature_0, soc_0, voltage_0 = state_0
 
         # charging_data: [25, charging_stamp, [stamp, location, current, soc, condition_temperature, voltage, ntc_max, ntc_min, temperature_max]]
         charging_data = list()
         # 计算通用数据
-        stamp = np.linspace(start=1, stop=charging_time, num=charging_time).reshape(-1, 1)
+        stamp = np.linspace(start=1, stop=charging_time, num=charging_time).reshape(-1, 1) + (0 if stamp_start is None else stamp_start)
         current = np.ones([charging_time, 1]) * current
         soc = self.integral_current(stamp, current, soc_0)
         condition_temperature = np.ones([charging_time, 1]) * (temperature_0 if (condition_temperature is None) else condition_temperature)
