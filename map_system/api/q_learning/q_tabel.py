@@ -15,7 +15,7 @@ class MAP_Tabel:
         return temperature_labels, soc_labels, tabel
 
     def change_tabel(self, temperature_1, soc_1, new_data):
-        self.tabel[self.soc_labels[soc_1]][temperature_1] = new_data
+        self.tabel.loc[temperature_1, self.soc_labels[soc_1]] = new_data
 
     def search_tabel(self, value, labels):
         value_id = 0
@@ -35,7 +35,10 @@ class MAP_Tabel:
         # 乘上电池容量
         return policy * 68.6
 
-    def get_policy(self, temperature, soc):
+    def get_policy_from_current(self, current):
+        return current / 68.6
+
+    def get_policy(self, temperature, soc, return_id=True):
         # MAP表查表
 
         # 获取temperature和soc的区间
@@ -44,4 +47,8 @@ class MAP_Tabel:
 
         # 查表
         policy = self.tabel[self.soc_labels[soc_id]][temperature_id]
-        return policy, (temperature_id, soc_id)
+
+        if return_id:
+            return policy, (temperature_id, soc_id)
+        else:
+            return policy

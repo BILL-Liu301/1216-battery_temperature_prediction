@@ -4,8 +4,8 @@ import numpy as np
 import librosa.util as librosa_util
 from torch.utils.data import Dataset, random_split, DataLoader
 
-from pythons.api.base.paras import paras_Prediction_All
-from pythons.api.base.paths import path_data_origin_pkl_real, path_data_origin_pkl_sim
+from api.base.paras import paras_Prediction_All
+from api.base.paths import path_data_origin_pkl_real, path_data_origin_pkl_sim
 
 
 class Prediction_All_Dataset(Dataset):
@@ -32,8 +32,8 @@ class Prediction_All_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            # if condition_data == '低温充电':
-            #     continue
+            if condition == '低温充电':
+                continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
                 if int(module.split('-')[1]) in modules:

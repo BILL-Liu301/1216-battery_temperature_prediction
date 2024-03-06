@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 from scipy.stats import norm
-from scipy.io import savemat2
+from scipy.io import savemat
 from tqdm import tqdm
 
 from api.base.paras import paras_Prediction_All

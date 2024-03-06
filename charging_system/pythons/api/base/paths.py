@@ -1,5 +1,5 @@
-path_base = 'E:/working_places/outputs/1216-battery_temperature_prediction/'
-path_code = 'E:/working_places/1216-battery_temperature_prediction/charging_system/'
+path_base = 'D:/working_places/outputs/1216-battery_temperature_prediction/'
+path_code = 'D:/working_places/1216/1216-battery_temperature_prediction/charging_system/'
 
 path_dataset = path_base + "datasets/"
 path_ckpts = path_base + "ckpts/"
