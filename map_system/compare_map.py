@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 
 from api.system.compare import Compare_System
 from api.base.path import path_map_tabel, path_map_tabel_new, path_ckpt_best_version
+from charging_system.pythons.api.base.paths import path_figs_test
 
 if __name__ == '__main__':
     # 创建可视化窗口
@@ -14,6 +15,7 @@ if __name__ == '__main__':
     # 循环充电
     compare_system.charging_both(soc_end=90)
 
+    print('开始展示')
     # 充电结果动态表示
     compare_system.plot_both(plot_speed=20)
     plt.pause(1)
@@ -29,4 +31,5 @@ if __name__ == '__main__':
     # plt.pause(1)
 
     # 最终展示
+    plt.savefig(path_figs_test + 'compare.jpg')
     plt.show()
