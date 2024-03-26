@@ -15,6 +15,7 @@ class Prediction_Temperature_Dataset(Dataset):
         self.split_length = paras['split_length']  # 取点间隔，间隔为n个数时，split_length=n+1
         self.modules = [0] if (modules is None) else modules
         self.seq_history, self.seq_predict, self.scale = paras['seq_history'], paras['seq_predict'], paras['scale']
+        self.data_condition = []
         self.data = self.load_from_pkl(path_data, self.modules)
 
     def load_from_pkl(self, path_data, modules):
@@ -25,8 +26,8 @@ class Prediction_Temperature_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            if condition == '低温充电':
-                continue
+            # if condition == '低温充电':
+            #     continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
                 if int(module.split('-')[1]) in modules:
@@ -49,6 +50,7 @@ class Prediction_Temperature_Dataset(Dataset):
                                 data.append(torch.from_numpy(data_slide[:, 0:-1:self.split_length, slide].transpose().copy()).to(torch.float32))
                         else:
                             data.append(torch.from_numpy(data_origin[0:-1:self.split_length, :].copy()).to(torch.float32))
+                        self.data_condition.append(f'{condition}')
         return data
 
     def __len__(self):

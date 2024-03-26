@@ -7,7 +7,8 @@ def plot_for_prediction_state_val_test(fig, title, _result, paras):
     plt.clf()
     xx = _result['origin'][0]
 
-    fig.suptitle(f'Prediction_State_{title}', y=0.91, fontsize=15)
+    # fig.suptitle(f'Prediction_State_{title}', y=0.91, fontsize=15)  # 用于日常debug
+    fig.suptitle(f'{title}', y=0.91, fontsize=15)  # 用于保存最终结果
 
     # Voltage
     pre_mean, pre_std, ref_mean, prob, loss, origin = (
@@ -135,7 +136,8 @@ def plot_for_prediction_temperature_val_test(fig, title, _result, paras):
     xx = _result['origin'][0]
     info = _result['info']
 
-    fig.suptitle(f'Prediction_Temperature_{title}', y=0.91, fontsize=15)
+    # fig.suptitle(f'Prediction_Temperature_{title}', y=0.91, fontsize=15)  # 用于日常debug
+    fig.suptitle(f'{title}', y=0.91, fontsize=15)  # 用于保存最终结果
 
     # 结果展示
     ax = plt.subplot(6, 1, 1)
