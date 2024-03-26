@@ -110,8 +110,8 @@ class Compare_System:
 
     def plot_single(self, flag_finish, plot_times, plot_side, PolicyorCurrent, condition_record, map_name):
         # 字体大小
-        fontsize_1 = 5  # 图例的字体大小
-        fontsize_2 = 5  # 坐标轴的字体大小
+        fontsize_1 = 7  # 图例的字体大小
+        fontsize_2 = 7  # 坐标轴的字体大小
         pad = 0.55   # 坐标与坐标轴之间的距离
 
         # 判断是否充电完毕

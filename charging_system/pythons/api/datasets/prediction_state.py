@@ -15,6 +15,7 @@ class Prediction_State_Dataset(Dataset):
         self.split_length = paras['split_length']  # 取点间隔，间隔为n个数时，split_length=n+1
         self.modules = [0] if (modules is None) else modules
         self.seq_history, self.seq_predict, self.current_to_soc = paras['seq_history'], paras['seq_predict'], paras['current_to_soc']
+        self.data_condition = []
         self.data = self.load_from_pkl(path_data, self.modules)
 
     def integral_i(self, stamp, current, soc_0):
@@ -32,8 +33,8 @@ class Prediction_State_Dataset(Dataset):
 
         # 按工况遍历
         for condition, dataset_condition in dataset.items():
-            if condition == '低温充电':
-                continue
+            # if condition == '低温充电':
+            #     continue
             # 按模组遍历
             for module, dataset_module in dataset_condition.items():
                 if int(module.split('-')[1]) in modules:
@@ -42,10 +43,10 @@ class Prediction_State_Dataset(Dataset):
                         stamp = dataset_group['stamp']
                         current = dataset_group['Current']
                         soc = self.integral_i(stamp, current, dataset_group['SOC'][0, 0])
-                        condition = np.ones(soc.shape) * dataset_group['NTC'].mean(axis=1)[0]
+                        condition_temperature = np.ones(soc.shape) * dataset_group['NTC'].mean(axis=1)[0]
                         voltage = dataset_group['Voltage']
                         ntc = dataset_group['NTC']
-                        data_origin = np.concatenate([stamp, current, soc, condition,
+                        data_origin = np.concatenate([stamp, current, soc, condition_temperature,
                                                       voltage, ntc.max(axis=1, keepdims=True), ntc.min(axis=1, keepdims=True)],
                                                      axis=1)
                         # 数据分割与否
@@ -56,6 +57,7 @@ class Prediction_State_Dataset(Dataset):
                         else:
                             data.append(torch.from_numpy(data_origin[0:-1:self.split_length, :].copy()).to(torch.float32))
                         break
+                    self.data_condition.append(f'{condition}')
         return data
 
     def __len__(self):

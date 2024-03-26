@@ -10,12 +10,14 @@ from lightning_fabric.utilities.warnings import PossibleUserWarning
 from api.base.paras import paras_Prediction_Temperature
 from api.datasets.prediction_temperature import paras_Prediction_Temperature_dataset
 from api.models.prediction_temperature import Prediction_Temperature_LightningModule
-from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test
-from pythons.api.util.plots import plot_for_prediction_temperature_val_test
+from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test, path_result_store_temperature
+from api.util.plots import plot_for_prediction_temperature_val_test
 
 if __name__ == '__main__':
     pl.seed_everything(2024)
     fig = plt.figure(figsize=(20, 11.25))
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 设置显示中文字体
+    plt.rcParams['axes.unicode_minus'] = False  # 设置正常显示符号
 
     # 为了好看，屏蔽warning，没事别解注释这个
     warnings.filterwarnings('ignore', category=PossibleUserWarning)
@@ -40,5 +42,8 @@ if __name__ == '__main__':
     print(f'平均最小误差：{loss_min.mean()}(℃)')
     for i in tqdm(range(0, len(model.test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_results = model.test_results[i]
-        plot_for_prediction_temperature_val_test(fig, i, test_results, paras_Prediction_Temperature)
-        plt.savefig(path_figs_test + f'{i}.png')
+        # plot_for_prediction_temperature_val_test(fig, i, test_results, paras_Prediction_Temperature)  # 用于日常debug
+        # plt.savefig(path_figs_test + f'{i}.png')  # 用于日常debug
+
+        plot_for_prediction_temperature_val_test(fig, f'{dataloaders.dataset.data_condition[i]}_{i % 25}', test_results, paras_Prediction_Temperature)  # 用于保存最终结果
+        plt.savefig(path_result_store_temperature + f'{i}.png')  # 用于保存最终结果

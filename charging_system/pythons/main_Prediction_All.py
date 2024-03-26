@@ -13,7 +13,7 @@ from api.datasets.prediction_all import dataset_test
 from api.models.prediction_state import Prediction_State_Module
 from api.models.prediction_temperature import Prediction_Temperature_Module
 from api.models.prediction_all import Prediction_All_Module
-from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test, path_mat
+from api.base.paths import path_ckpt_best_version, path_ckpts, path_figs_test, path_mat, path_result_store_all
 from api.util.plots import plot_for_prediction_all_val_test
 
 if __name__ == '__main__':
@@ -130,14 +130,7 @@ if __name__ == '__main__':
         print(f'\t平均最小误差：{loss_min.mean():.4f}V?℃')
     for i in tqdm(range(0, len(test_results), 1), desc='Test', leave=False, ncols=100, disable=False):
         test_result = test_results[i]
-        if i <= 24:
-            group_id = i
-            name = dataset_test.data_condition[0]
-        elif 25 <= i <= 49:
-            group_id = i - 25
-            name = dataset_test.data_condition[1]
-        else:
-            group_id = i - 50
-            name = dataset_test.data_condition[2]
-        plot_for_prediction_all_val_test(fig, f'{name}_{group_id + 1}', test_result, paras_Prediction_All)
-        plt.savefig(path_figs_test + f'{i}.png')
+
+        plot_for_prediction_all_val_test(fig, f'{dataset_test.data_condition[i]}_{i % 25}', test_result, paras_Prediction_All)
+        # plt.savefig(path_figs_test + f'{i}.png')  # 用于日常debug
+        plt.savefig(path_result_store_all + f'{i}.png')  # 用于保存最终结果

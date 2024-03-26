@@ -16,21 +16,21 @@ class Learning_Core:
         self.path_new_map_tabel = path_new_map_tabel
 
         # 参数变量
-        self.alpha = 0.001
-        self.gamma = 0.001
+        self.alpha = 1e-3
+        self.gamma = 0.05
         self.episode_max = 200
         self.charging_time = 51
-        num_condition = 40
-        self.condition = self.init_condition(num_condition)
+        self.num_condition = 40
+        self.condition = self.init_condition()
 
         # 每个模组内由25个电芯组，每隔2s为一个时间戳
         self.split_time = 2
         self.num_group = 25
 
-    def init_condition(self, num_condition):
-        temperature = np.linspace(start=20, stop=40, num=num_condition)
-        soc = np.random.uniform(-1, 1, num_condition) * 2 + 10.0
-        voltage = np.random.uniform(-1, 1, num_condition) * 20.0 + 350.0
+    def init_condition(self):
+        temperature = np.linspace(start=20, stop=40, num=self.num_condition)
+        soc = np.random.uniform(-1, 1, self.num_condition) * 2 + 10.0
+        voltage = np.random.uniform(-1, 1, self.num_condition) * 20.0 + 350.0
         ntc_max = temperature.copy()
         ntc_min = temperature.copy()
         return np.stack([temperature, soc, voltage, ntc_max, ntc_min], axis=1)
@@ -50,9 +50,9 @@ class Learning_Core:
 
         return temperature_max, soc, voltage, ntc_max, ntc_min
 
-    def plot_map(self, fig, pause, temperature_id, soc_id, soc_now, condition_id, flag_finish=False):
+    def plot_map(self, fig, pause, temperature_id, soc_id, soc_now, condition_id, num_condition, flag_finish=False):
         # 设置字体
-        fontsize = 5  # 坐标轴的字体大小
+        fontsize = 7  # 坐标轴的字体大小
         pad = 0.55  # 坐标与坐标轴之间的距离
 
         plt.clf()
@@ -86,7 +86,7 @@ class Learning_Core:
                          color='r' if flag_finish else 'g', alpha=0.7)
         # 进度值
         plt.text(5, soc_now, f'SOC:{soc_now:.2f}%', ha='center', va='bottom', fontsize=fontsize)
-        plt.text(5, 100, f'condition ID:{condition_id}', ha='center', va='bottom', fontsize=fontsize)
+        plt.text(5, 100, f'condition ID:{condition_id}/{num_condition}', ha='center', va='bottom', fontsize=fontsize)
         # 设置外型
         plt.xlim((-1, 11))
         plt.ylim((-5, 105))
